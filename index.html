@@ -1,0 +1,2842 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PiñaTrack Pro - Sistema Completo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .nav-item {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .nav-item.active {
+            color: #f59e0b;
+        }
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: #f59e0b;
+            border-radius: 50%;
+        }
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+        .screen.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .type-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .type-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.3);
+        }
+        .type-card.selected {
+            ring-width: 3px;
+            --tw-ring-opacity: 1;
+            --tw-ring-color: rgb(245 158 11 / var(--tw-ring-opacity));
+            border-color: #f59e0b;
+            background-color: #fffbeb;
+        }
+        .stock-item {
+            transition: all 0.3s ease;
+        }
+        .stock-item:hover {
+            transform: translateX(4px);
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #f59e0b; border-radius: 3px; }
+        
+        .slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .payment-toggle {
+            transition: all 0.3s ease;
+        }
+        .payment-toggle.active {
+            background-color: #f59e0b;
+            color: white;
+            border-color: #f59e0b;
+        }
+        .multi-select-item {
+            transition: all 0.2s ease;
+        }
+        .multi-select-item.selected {
+            background-color: #fffbeb;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+        .debt-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+        }
+        .cart-item {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .quantity-btn {
+            transition: all 0.2s ease;
+        }
+        .quantity-btn:hover {
+            transform: scale(1.1);
+        }
+        .quantity-btn:active {
+            transform: scale(0.95);
+        }
+        .total-editable {
+            transition: all 0.3s ease;
+        }
+        .total-editable:focus {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+        }
+        .payment-summary-card {
+            transition: all 0.3s ease;
+        }
+        .payment-summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.1);
+        }
+        /* Estilos para el timeline de pagos */
+        .payment-timeline {
+            position: relative;
+            padding-left: 20px;
+        }
+        .payment-timeline::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #10b981, #f59e0b, #ef4444);
+        }
+        .payment-item {
+            position: relative;
+            padding-bottom: 16px;
+        }
+        .payment-item::before {
+            content: '';
+            position: absolute;
+            left: -18px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #10b981;
+            z-index: 10;
+        }
+        .payment-item.credit-initial::before {
+            border-color: #f59e0b;
+        }
+        .payment-item.remaining::before {
+            border-color: #ef4444;
+        }
+        /* Estilos para indicadores de ganancia/pérdida */
+        .profit-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .profit-positive {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .profit-negative {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .profit-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 z-20 flex-none">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg">
+                        <i class="fas fa-apple-alt text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                            PiñaTrack Pro
+                        </h1>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Sistema de Gestión</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-xs text-gray-500" id="headerDate"></p>
+                        <p class="text-sm font-bold text-gray-800" id="headerTime"></p>
+                    </div>
+                    <button onclick="exportAllData()" class="p-2 text-gray-600 hover:text-amber-600 transition-colors" title="Exportar datos">
+                        <i class="fas fa-download text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50 relative">
+        
+        <!-- SCREEN: INICIO (Dashboard) -->
+        <div id="screen-inicio" class="screen active max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <!-- SECCIÓN SUPERIOR: Mantiene datos del DÍA (no se toca) -->
+            <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-6 text-white mb-6 shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full -mr-20 -mt-20"></div>
+                <div class="relative z-10">
+                    <h2 class="text-2xl font-bold mb-2">¡Hola! 👋</h2>
+                    <p class="text-amber-100 mb-4">Resumen de tu negocio hoy</p>
+                    <div class="flex flex-wrap gap-4">
+                        <div class="bg-white/20 backdrop-blur rounded-lg px-4 py-2">
+                            <span class="text-amber-100 text-xs block">Ventas Hoy</span>
+                            <span class="text-2xl font-bold" id="dashTodaySales">S/ 0</span>
+                        </div>
+                        <div class="bg-white/20 backdrop-blur rounded-lg px-4 py-2">
+                            <span class="text-amber-100 text-xs block">Deuda con Prov.</span>
+                            <span class="text-2xl font-bold" id="dashProviderDebt">S/ 0</span>
+                        </div>
+                        <div class="bg-white/20 backdrop-blur rounded-lg px-4 py-2">
+                            <span class="text-amber-100 text-xs block">Stock Bajo</span>
+                            <span class="text-2xl font-bold" id="dashLowStock">0</span>
+                        </div>
+                        <div class="bg-white/20 backdrop-blur rounded-lg px-4 py-2">
+                            <span class="text-amber-100 text-xs block">Margen Hoy</span>
+                            <span class="text-2xl font-bold" id="dashTodayMargin">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN INFERIOR: Datos SEMANALES (cambiado) -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-calendar-week mr-2 text-amber-500"></i>
+                        Resumen de la Semana
+                    </h3>
+                    <span class="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                        Últimos 7 días
+                    </span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-gray-500 font-medium">Ventas Semana</span>
+                            <i class="fas fa-chart-line text-green-500 text-lg"></i>
+                        </div>
+                        <p class="text-xl font-bold text-gray-800" id="dashWeekSales">S/ 0</p>
+                        <p class="text-xs text-gray-400 mt-1" id="weekSalesTrend">0 ventas</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-gray-500 font-medium">Piñas Semana</span>
+                            <i class="fas fa-shopping-basket text-amber-500 text-lg"></i>
+                        </div>
+                        <p class="text-xl font-bold text-gray-800" id="dashWeekPineapples">0</p>
+                        <p class="text-xs text-gray-400 mt-1">unidades vendidas</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-gray-500 font-medium">Por Cobrar</span>
+                            <i class="fas fa-hand-holding-usd text-red-500 text-lg"></i>
+                        </div>
+                        <p class="text-xl font-bold text-gray-800" id="dashPendingAmount">S/ 0</p>
+                        <p class="text-xs text-gray-400 mt-1">créditos activos</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-gray-500 font-medium">Ganancia Semana</span>
+                            <i class="fas fa-coins text-green-600 text-lg"></i>
+                        </div>
+                        <p class="text-xl font-bold text-gray-800" id="dashWeekProfit">S/ 0</p>
+                        <p class="text-xs text-gray-400 mt-1" id="weekMarginText">0% margen</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-chart-pie mr-2 text-amber-500"></i>
+                        Ventas por Tipo - Semana
+                    </h3>
+                    <div class="h-64 relative">
+                        <canvas id="homeChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-chart-bar mr-2 text-amber-500"></i>
+                        Tendencia Semanal
+                    </h3>
+                    <div class="h-64 relative">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN: VENTAS - MULTI-PRODUCTO CON TOTAL EDITABLE Y RESUMEN POR MÉTODO DE PAGO -->
+        <div id="screen-ventas" class="screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <!-- RESUMEN DE VENTAS POR MÉTODO DE PAGO -->
+            <div class="mb-6">
+                <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-chart-pie mr-2 text-amber-500"></i>
+                    Resumen de Ventas del Día por Método de Pago
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Efectivo -->
+                    <div class="payment-summary-card bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white shadow-md">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-800">Efectivo</h3>
+                                    <p class="text-xs text-gray-500">Ventas en efectivo</p>
+                                </div>
+                            </div>
+                            <span class="text-2xl font-bold text-green-600" id="cashTotal">S/ 0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600">Transacciones: <span class="font-semibold text-gray-800" id="cashCount">0</span></span>
+                            <span class="text-green-600 font-medium" id="cashPercentage">0%</span>
+                        </div>
+                        <div class="mt-3 bg-green-200 rounded-full h-2 overflow-hidden">
+                            <div id="cashBar" class="bg-green-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Yape/Transferencia -->
+                    <div class="payment-summary-card bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white shadow-md">
+                                    <i class="fas fa-mobile-alt"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-800">Yape / Plin</h3>
+                                    <p class="text-xs text-gray-500">Transferencias digitales</p>
+                                </div>
+                            </div>
+                            <span class="text-2xl font-bold text-blue-600" id="transferTotal">S/ 0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600">Transacciones: <span class="font-semibold text-gray-800" id="transferCount">0</span></span>
+                            <span class="text-blue-600 font-medium" id="transferPercentage">0%</span>
+                        </div>
+                        <div class="mt-3 bg-blue-200 rounded-full h-2 overflow-hidden">
+                            <div id="transferBar" class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Crédito -->
+                    <div class="payment-summary-card bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-4 border-2 border-red-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white shadow-md">
+                                    <i class="fas fa-hand-holding-usd"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-800">Crédito / Fiado</h3>
+                                    <p class="text-xs text-gray-500">Ventas a crédito</p>
+                                </div>
+                            </div>
+                            <span class="text-2xl font-bold text-red-600" id="creditTotal">S/ 0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600">Transacciones: <span class="font-semibold text-gray-800" id="creditCount">0</span></span>
+                            <span class="text-red-600 font-medium" id="creditPercentage">0%</span>
+                        </div>
+                        <div class="mt-3 bg-red-200 rounded-full h-2 overflow-hidden">
+                            <div id="creditBar" class="bg-red-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total General -->
+                <div class="mt-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border-2 border-amber-200 shadow-sm flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-md">
+                            <i class="fas fa-calculator text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800 text-lg">Total del Día</h3>
+                            <p class="text-sm text-gray-600" id="totalTransactions">0 transacciones en total</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent" id="grandTotal">S/ 0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Panel Izquierdo: Selección de Productos -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Selector de Productos -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4">
+                            <h2 class="text-xl font-bold text-white flex items-center">
+                                <i class="fas fa-plus-circle mr-2"></i>
+                                Seleccionar Productos
+                            </h2>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-sm text-gray-600 mb-4">Selecciona uno o más tipos de piña para agregar al carrito</p>
+                            
+                            <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                                <div class="type-card cursor-pointer rounded-xl border-2 border-gray-200 p-3 text-center bg-white hover:border-amber-400" onclick="addToCart('C6')">
+                                    <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-500 flex items-center justify-center text-white font-bold text-sm shadow-md">C6</div>
+                                    <p class="text-xs font-bold text-gray-700">C6</p>
+                                    <p class="text-[10px] text-gray-500">Extra Grande</p>
+                                    <p class="text-[10px] text-amber-600 font-semibold mt-1">S/ <span id="price-display-C6">25</span></p>
+                                </div>
+                                <div class="type-card cursor-pointer rounded-xl border-2 border-gray-200 p-3 text-center bg-white hover:border-amber-400" onclick="addToCart('C8')">
+                                    <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center text-white font-bold text-sm shadow-md">C8</div>
+                                    <p class="text-xs font-bold text-gray-700">C8</p>
+                                    <p class="text-[10px] text-gray-500">Grande</p>
+                                    <p class="text-[10px] text-amber-600 font-semibold mt-1">S/ <span id="price-display-C8">20</span></p>
+                                </div>
+                                <div class="type-card cursor-pointer rounded-xl border-2 border-gray-200 p-3 text-center bg-white hover:border-amber-400" onclick="addToCart('C10')">
+                                    <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm shadow-md">C10</div>
+                                    <p class="text-xs font-bold text-gray-700">C10</p>
+                                    <p class="text-[10px] text-gray-500">Mediana</p>
+                                    <p class="text-[10px] text-amber-600 font-semibold mt-1">S/ <span id="price-display-C10">15</span></p>
+                                </div>
+                                <div class="type-card cursor-pointer rounded-xl border-2 border-gray-200 p-3 text-center bg-white hover:border-amber-400" onclick="addToCart('C12')">
+                                    <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-gradient-to-br from-orange-500 to-red-400 flex items-center justify-center text-white font-bold text-sm shadow-md">C12</div>
+                                    <p class="text-xs font-bold text-gray-700">C12</p>
+                                    <p class="text-[10px] text-gray-500">Chica</p>
+                                    <p class="text-[10px] text-amber-600 font-semibold mt-1">S/ <span id="price-display-C12">12</span></p>
+                                </div>
+                                <div class="type-card cursor-pointer rounded-xl border-2 border-gray-200 p-3 text-center bg-white hover:border-amber-400" onclick="addToCart('C14')">
+                                    <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-gradient-to-br from-red-400 to-red-500 flex items-center justify-center text-white font-bold text-sm shadow-md">C14</div>
+                                    <p class="text-xs font-bold text-gray-700">C14</p>
+                                    <p class="text-[10px] text-gray-500">Mini</p>
+                                    <p class="text-[10px] text-amber-600 font-semibold mt-1">S/ <span id="price-display-C14">8</span></p>
+                                </div>
+                                <div class="type-card cursor-pointer rounded-xl border-2 border-gray-200 p-3 text-center bg-gray-50 hover:border-gray-400" onclick="addToCart('DES')">
+                                    <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-white font-bold text-sm shadow-md">DES</div>
+                                    <p class="text-xs font-bold text-gray-700">DES</p>
+                                    <p class="text-[10px] text-gray-500">Desecho</p>
+                                    <p class="text-[10px] text-amber-600 font-semibold mt-1">S/ <span id="price-display-DES">3</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carrito de Compras -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                            <h3 class="font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-shopping-cart mr-2 text-amber-500"></i>
+                                Carrito de Venta
+                            </h3>
+                            <span id="cartCount" class="bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full">0 items</span>
+                        </div>
+                        
+                        <div id="cartItems" class="p-4 space-y-3 min-h-[200px] max-h-[400px] overflow-y-auto">
+                            <div id="emptyCart" class="text-center py-12 text-gray-400">
+                                <i class="fas fa-shopping-basket text-4xl mb-3 opacity-30"></i>
+                                <p class="text-sm">El carrito está vacío</p>
+                                <p class="text-xs mt-1">Selecciona productos arriba para comenzar</p>
+                            </div>
+                        </div>
+
+                        <!-- Análisis de Rentabilidad -->
+                        <div id="profitAnalysis" class="hidden px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-t border-blue-200">
+                            <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
+                                <i class="fas fa-chart-line mr-2 text-blue-500"></i>
+                                Análisis de Rentabilidad
+                            </h4>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-600">Costo estimado:</span>
+                                    <span class="font-semibold text-gray-800" id="estimatedCost">S/ 0.00</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Ganancia bruta:</span>
+                                    <span class="font-semibold" id="estimatedProfit">S/ 0.00</span>
+                                </div>
+                            </div>
+                            <div class="mt-2 flex items-center justify-between">
+                                <span class="text-xs text-gray-600">Margen estimado:</span>
+                                <span class="profit-indicator" id="estimatedMargin">0%</span>
+                            </div>
+                            <div id="lossWarning" class="hidden mt-2 p-2 bg-red-100 border border-red-300 rounded-lg text-xs text-red-700 flex items-center">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                <span>¡Atención! Estás vendiendo a pérdida</span>
+                            </div>
+                        </div>
+
+                        <!-- Totales del Carrito con Total Editable -->
+                        <div class="p-4 border-t border-gray-100 bg-gradient-to-r from-amber-50 to-orange-50">
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-gray-600">Subtotal calculado:</span>
+                                    <span class="font-semibold text-gray-800" id="cartCalculatedSubtotal">S/ 0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-gray-600">Total de piñas:</span>
+                                    <span class="font-semibold text-gray-800" id="cartTotalPineapples">0</span>
+                                </div>
+                                <div class="flex justify-between items-center text-lg font-bold border-t-2 border-amber-300 pt-3 mt-3">
+                                    <span class="text-gray-800 flex items-center">
+                                        <i class="fas fa-edit mr-2 text-amber-500"></i>
+                                        TOTAL A COBRAR:
+                                    </span>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2 text-amber-600 font-bold text-lg">S/</span>
+                                        <input type="number" id="cartTotalEditable" value="0.00" min="0" step="0.01"
+                                            class="total-editable w-32 pl-10 pr-3 py-2 text-right text-2xl font-bold text-amber-600 bg-white border-2 border-amber-300 rounded-xl focus:border-amber-500 focus:outline-none"
+                                            onchange="updateManualTotal(this.value)">
+                                    </div>
+                                </div>
+                                <div id="manualAdjustmentNote" class="hidden text-xs text-amber-600 text-right italic">
+                                    Total ajustado manualmente
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Derecho: Checkout -->
+                <div class="space-y-6">
+                    <!-- Método de Pago -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                            <h3 class="font-bold text-gray-800">Método de Pago</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="grid grid-cols-1 gap-3">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="payment" value="cash" class="peer sr-only" checked onchange="toggleCreditSection()">
+                                    <div class="rounded-xl border-2 border-gray-200 p-4 flex items-center space-x-3 peer-checked:border-amber-500 peer-checked:bg-amber-50 transition-all hover:border-amber-300">
+                                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                            <i class="fas fa-money-bill-wave text-lg"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <span class="font-semibold text-gray-800 block">Efectivo</span>
+                                            <span class="text-xs text-gray-500">Pago inmediato</span>
+                                        </div>
+                                        <div class="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-amber-500 peer-checked:bg-amber-500 flex items-center justify-center">
+                                            <i class="fas fa-check text-white text-xs opacity-0 peer-checked:opacity-100"></i>
+                                        </div>
+                                    </div>
+                                </label>
+                                
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="payment" value="transfer" class="peer sr-only" onchange="toggleCreditSection()">
+                                    <div class="rounded-xl border-2 border-gray-200 p-4 flex items-center space-x-3 peer-checked:border-amber-500 peer-checked:bg-amber-50 transition-all hover:border-amber-300">
+                                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                            <i class="fas fa-mobile-alt text-lg"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <span class="font-semibold text-gray-800 block">Transferencia</span>
+                                            <span class="text-xs text-gray-500">Yape, Plin, Transferencia</span>
+                                        </div>
+                                        <div class="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-amber-500 peer-checked:bg-amber-500 flex items-center justify-center">
+                                            <i class="fas fa-check text-white text-xs opacity-0 peer-checked:opacity-100"></i>
+                                        </div>
+                                    </div>
+                                </label>
+                                
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="payment" value="credit" class="peer sr-only" onchange="toggleCreditSection()">
+                                    <div class="rounded-xl border-2 border-gray-200 p-4 flex items-center space-x-3 peer-checked:border-amber-500 peer-checked:bg-amber-50 transition-all hover:border-amber-300">
+                                        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                                            <i class="fas fa-hand-holding-usd text-lg"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <span class="font-semibold text-gray-800 block">Crédito / Fiado</span>
+                                            <span class="text-xs text-gray-500">Pagar después</span>
+                                        </div>
+                                        <div class="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-amber-500 peer-checked:bg-amber-500 flex items-center justify-center">
+                                            <i class="fas fa-check text-white text-xs opacity-0 peer-checked:opacity-100"></i>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Sección de Crédito -->
+                            <div id="creditSection" class="hidden space-y-3 bg-red-50 border border-red-200 rounded-xl p-4">
+                                <h4 class="font-semibold text-red-800 text-sm flex items-center">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Datos del Cliente
+                                </h4>
+                                <input type="text" id="creditClient" placeholder="Nombre completo del cliente *" 
+                                    class="w-full px-3 py-2 rounded-lg border border-red-200 focus:border-red-500 outline-none text-sm">
+                                <input type="tel" id="creditPhone" placeholder="Teléfono de contacto" 
+                                    class="w-full px-3 py-2 rounded-lg border border-red-200 focus:border-red-500 outline-none text-sm">
+                                <textarea id="creditNotes" placeholder="Notas adicionales..." rows="2"
+                                    class="w-full px-3 py-2 rounded-lg border border-red-200 focus:border-red-500 outline-none resize-none text-sm"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Venta -->
+                    <button onclick="processMultiSale()" id="btnCompleteSale"
+                        class="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl shadow-lg transform hover:scale-[1.02] transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+                        <i class="fas fa-check-circle text-xl"></i>
+                        <span>Completar Venta</span>
+                    </button>
+
+                    <!-- Ventas del Día -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                            <h3 class="font-bold text-gray-800 text-sm">Ventas de Hoy</h3>
+                            <span class="text-xs text-gray-500" id="todaySalesCount">0 ventas</span>
+                        </div>
+                        <div class="max-h-[300px] overflow-y-auto p-4" id="todaySalesList">
+                            <p class="text-center text-gray-400 text-sm py-4">No hay ventas registradas hoy</p>
+                        </div>
+                        <div class="p-4 border-t border-gray-100 bg-gray-50">
+                            <div class="flex justify-between items-center font-bold">
+                                <span class="text-gray-700">Total del Día:</span>
+                                <span class="text-amber-600 text-lg" id="todayTotalSales">S/ 0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm mt-2 pt-2 border-t border-gray-200">
+                                <span class="text-gray-600">Ganancia total:</span>
+                                <span class="text-green-600 font-bold" id="todayTotalProfit">S/ 0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN: STOCK -->
+        <div id="screen-stock" class="screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Inventario y Compras</h2>
+                    <p class="text-sm text-gray-500">Gestión de stock y proveedores</p>
+                </div>
+                <button onclick="openStockModal()" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all flex items-center space-x-2 shadow-lg transform hover:scale-105">
+                    <i class="fas fa-truck-loading"></i>
+                    <span>Nueva Compra</span>
+                </button>
+            </div>
+
+            <!-- Provider Debt Summary -->
+            <div class="debt-card rounded-xl p-4 mb-6 shadow-md">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-hand-holding-usd mr-2 text-amber-600"></i>
+                            Deuda Total con Proveedores
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1" id="providerDebtSummary">Calculando...</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-3xl font-bold text-amber-700" id="totalProviderDebt">S/ 0.00</p>
+                        <button onclick="showProviderDebts()" class="text-xs text-amber-600 hover:text-amber-800 underline mt-1">
+                            Ver detalle de deudas
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Overview Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-yellow-400 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold text-gray-500">C6</span>
+                        <span class="text-xs text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded-full">Extra</span>
+                    </div>
+                    <p class="text-2xl font-bold text-gray-800" id="stockC6">0</p>
+                    <p class="text-xs text-gray-400">unidades</p>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-orange-400 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold text-gray-500">C8</span>
+                        <span class="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">Grande</span>
+                    </div>
+                    <p class="text-2xl font-bold text-gray-800" id="stockC8">0</p>
+                    <p class="text-xs text-gray-400">unidades</p>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-orange-500 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold text-gray-500">C10</span>
+                        <span class="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">Mediana</span>
+                    </div>
+                    <p class="text-2xl font-bold text-gray-800" id="stockC10">0</p>
+                    <p class="text-xs text-gray-400">unidades</p>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-red-400 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold text-gray-500">C12</span>
+                        <span class="text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Chica</span>
+                    </div>
+                    <p class="text-2xl font-bold text-gray-800" id="stockC12">0</p>
+                    <p class="text-xs text-gray-400">unidades</p>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-red-500 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold text-gray-500">C14</span>
+                        <span class="text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Mini</span>
+                    </div>
+                    <p class="text-2xl font-bold text-gray-800" id="stockC14">0</p>
+                    <p class="text-xs text-gray-400">unidades</p>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-gray-400 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold text-gray-500">DES</span>
+                        <span class="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">Desecho</span>
+                    </div>
+                    <p class="text-2xl font-bold text-gray-800" id="stockDES">0</p>
+                    <p class="text-xs text-gray-400">unidades</p>
+                </div>
+            </div>
+
+            <!-- Stock Visualization -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Niveles de Inventario</h3>
+                <div class="space-y-4" id="stockBars"></div>
+            </div>
+
+            <!-- Purchase History with Payment Actions -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-800">Historial de Compras</h3>
+                    <div class="flex space-x-2">
+                        <button onclick="filterPurchases('all')" class="px-3 py-1 text-xs rounded-full bg-amber-500 text-white">Todas</button>
+                        <button onclick="filterPurchases('cash')" class="px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-700 hover:bg-green-100 hover:text-green-700">Contado</button>
+                        <button onclick="filterPurchases('credit')" class="px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-700">Crédito</button>
+                        <button onclick="filterPurchases('pending')" class="px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-100 hover:text-yellow-700">Pendientes</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Fecha</th>
+                                <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Proveedor</th>
+                                <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Productos (Precio Unit.)</th>
+                                <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Total</th>
+                                <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Saldo</th>
+                                <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="purchaseHistory" class="divide-y divide-gray-100">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN: CRÉDITO CON FILTROS MEJORADOS -->
+        <div id="screen-credito" class="screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Gestión de Créditos</h2>
+                    <p class="text-sm text-gray-500">Clientes fiados y pagos pendientes</p>
+                </div>
+                <div class="bg-red-100 text-red-800 px-4 py-2 rounded-lg font-bold">
+                    Total por Cobrar: <span id="totalCreditAmount">S/ 0.00</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Créditos Activos</p>
+                            <p class="text-2xl font-bold text-gray-800" id="activeCreditsCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-600">
+                            <i class="fas fa-users text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Deuda Total</p>
+                            <p class="text-2xl font-bold text-red-600" id="totalDebtAmount">S/ 0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+                            <i class="fas fa-file-invoice-dollar text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Cobrado Este Mes</p>
+                            <p class="text-2xl font-bold text-green-600" id="collectedThisMonth">S/ 0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                            <i class="fas fa-check-circle text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <h3 class="font-bold text-gray-800">Lista de Deudores</h3>
+                    <div class="flex space-x-2">
+                        <button onclick="filterCredits('all')" class="px-3 py-1 text-xs rounded-full bg-amber-500 text-white">Todos</button>
+                        <button onclick="filterCredits('pending')" class="px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-100 hover:text-yellow-700">Pendientes</button>
+                        <button onclick="filterCredits('paid')" class="px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-700 hover:bg-green-100 hover:text-green-700">Pagados</button>
+                        <button onclick="filterCredits('high')" class="px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-700">Deuda Alta (>S/100)</button>
+                        <button onclick="filterCredits('recent')" class="px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-700 hover:bg-blue-100 hover:text-blue-700">Recientes (<7 días)</button>
+                    </div>
+                </div>
+                <div id="creditsList" class="divide-y divide-gray-100"></div>
+            </div>
+        </div>
+
+        <!-- SCREEN: CUENTA -->
+        <div id="screen-cuenta" class="screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Configuración y Reportes</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-store mr-2 text-amber-500"></i>
+                        Perfil del Negocio
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Negocio</label>
+                            <input type="text" id="businessName" value="Venta de Piñas" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Propietario</label>
+                            <input type="text" id="ownerName" placeholder="Tu nombre" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                            <input type="tel" id="businessPhone" placeholder="Número de contacto" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 outline-none">
+                        </div>
+                        <button onclick="saveProfile()" class="w-full py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-tags mr-2 text-amber-500"></i>
+                        Precios en Soles (S/)
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-2 bg-yellow-50 rounded-lg">
+                            <span class="font-medium text-gray-700">C6 (Extra Grande)</span>
+                            <div class="flex items-center">
+                                <span class="text-gray-500 mr-2">S/</span>
+                                <input type="number" id="priceC6" value="25" class="w-20 px-2 py-1 text-right border rounded focus:border-amber-500 outline-none" onchange="updatePriceDisplay('C6', this.value)">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-orange-50 rounded-lg">
+                            <span class="font-medium text-gray-700">C8 (Grande)</span>
+                            <div class="flex items-center">
+                                <span class="text-gray-500 mr-2">S/</span>
+                                <input type="number" id="priceC8" value="20" class="w-20 px-2 py-1 text-right border rounded focus:border-amber-500 outline-none" onchange="updatePriceDisplay('C8', this.value)">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-orange-50 rounded-lg">
+                            <span class="font-medium text-gray-700">C10 (Mediana)</span>
+                            <div class="flex items-center">
+                                <span class="text-gray-500 mr-2">S/</span>
+                                <input type="number" id="priceC10" value="15" class="w-20 px-2 py-1 text-right border rounded focus:border-amber-500 outline-none" onchange="updatePriceDisplay('C10', this.value)">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-red-50 rounded-lg">
+                            <span class="font-medium text-gray-700">C12 (Chica)</span>
+                            <div class="flex items-center">
+                                <span class="text-gray-500 mr-2">S/</span>
+                                <input type="number" id="priceC12" value="12" class="w-20 px-2 py-1 text-right border rounded focus:border-amber-500 outline-none" onchange="updatePriceDisplay('C12', this.value)">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-red-50 rounded-lg">
+                            <span class="font-medium text-gray-700">C14 (Mini)</span>
+                            <div class="flex items-center">
+                                <span class="text-gray-500 mr-2">S/</span>
+                                <input type="number" id="priceC14" value="8" class="w-20 px-2 py-1 text-right border rounded focus:border-amber-500 outline-none" onchange="updatePriceDisplay('C14', this.value)">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-gray-100 rounded-lg">
+                            <span class="font-medium text-gray-700">DES (Desecho)</span>
+                            <div class="flex items-center">
+                                <span class="text-gray-500 mr-2">S/</span>
+                                <input type="number" id="priceDES" value="3" class="w-20 px-2 py-1 text-right border rounded focus:border-amber-500 outline-none" onchange="updatePriceDisplay('DES', this.value)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:col-span-2">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-file-export mr-2 text-amber-500"></i>
+                        Reportes y Exportación
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <button onclick="generateReport('daily')" class="p-4 border-2 border-gray-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all text-left group">
+                            <i class="fas fa-calendar-day text-2xl text-amber-500 mb-2 group-hover:scale-110 transition-transform block"></i>
+                            <span class="font-semibold text-gray-800 block">Reporte Diario</span>
+                            <span class="text-xs text-gray-500">Ventas de hoy</span>
+                        </button>
+                        <button onclick="generateReport('weekly')" class="p-4 border-2 border-gray-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all text-left group">
+                            <i class="fas fa-calendar-week text-2xl text-amber-500 mb-2 group-hover:scale-110 transition-transform block"></i>
+                            <span class="font-semibold text-gray-800 block">Reporte Semanal</span>
+                            <span class="text-xs text-gray-500">Últimos 7 días</span>
+                        </button>
+                        <button onclick="generateReport('monthly')" class="p-4 border-2 border-gray-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all text-left group">
+                            <i class="fas fa-calendar-alt text-2xl text-amber-500 mb-2 group-hover:scale-110 transition-transform block"></i>
+                            <span class="font-semibold text-gray-800 block">Reporte Mensual</span>
+                            <span class="text-xs text-gray-500">Este mes</span>
+                        </button>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <h4 class="font-semibold text-gray-800 mb-3">Zona Peligrosa</h4>
+                        <div class="flex space-x-4">
+                            <button onclick="clearAllData()" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium">
+                                <i class="fas fa-trash-alt mr-2"></i>Eliminar Todos los Datos
+                            </button>
+                            <button onclick="exportBackup()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
+                                <i class="fas fa-file-download mr-2"></i>Respaldo Completo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bg-white border-t border-gray-200 shadow-lg z-20 flex-none">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-around py-2">
+                <button onclick="switchScreen('inicio')" class="nav-item active flex flex-col items-center py-2 px-4 text-gray-500 hover:text-amber-600" data-screen="inicio">
+                    <i class="fas fa-home text-xl mb-1"></i>
+                    <span class="text-[10px] font-medium">Inicio</span>
+                </button>
+                <button onclick="switchScreen('ventas')" class="nav-item flex flex-col items-center py-2 px-4 text-gray-500 hover:text-amber-600" data-screen="ventas">
+                    <i class="fas fa-shopping-cart text-xl mb-1"></i>
+                    <span class="text-[10px] font-medium">Ventas</span>
+                </button>
+                <button onclick="switchScreen('stock')" class="nav-item flex flex-col items-center py-2 px-4 text-gray-500 hover:text-amber-600" data-screen="stock">
+                    <i class="fas fa-boxes text-xl mb-1"></i>
+                    <span class="text-[10px] font-medium">Stock</span>
+                </button>
+                <button onclick="switchScreen('credito')" class="nav-item flex flex-col items-center py-2 px-4 text-gray-500 hover:text-amber-600 relative" data-screen="credito">
+                    <i class="fas fa-hand-holding-usd text-xl mb-1"></i>
+                    <span class="text-[10px] font-medium">Crédito</span>
+                    <span id="creditBadge" class="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full hidden"></span>
+                </button>
+                <button onclick="switchScreen('cuenta')" class="nav-item flex flex-col items-center py-2 px-4 text-gray-500 hover:text-amber-600" data-screen="cuenta">
+                    <i class="fas fa-user-circle text-xl mb-1"></i>
+                    <span class="text-[10px] font-medium">Cuenta</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MODALES (Stock, Pagos, etc.) - Mantener igual que antes -->
+    <!-- ... [Resto de los modales se mantienen igual] ... -->
+
+    <!-- STOCK MODAL -->
+    <div id="stockModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto slide-up">
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800">Nueva Compra a Proveedor</h3>
+                    <p class="text-sm text-gray-500">Selecciona los productos y condiciones de pago</p>
+                </div>
+                <button onclick="closeStockModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre del Proveedor *</label>
+                        <input type="text" id="providerName" placeholder="Ej: Finca Los Pinos" 
+                            class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Teléfono (opcional)</label>
+                        <input type="tel" id="providerPhone" placeholder="Ej: 555-1234" 
+                            class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-3">Condición de Pago</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="setPurchasePayment('cash')" id="btnCash" class="payment-toggle active py-3 px-4 rounded-xl border-2 border-gray-200 flex items-center justify-center space-x-2 hover:border-amber-400">
+                            <i class="fas fa-money-bill-wave text-green-600"></i>
+                            <span class="font-semibold">Contado</span>
+                        </button>
+                        <button onclick="setPurchasePayment('credit')" id="btnCredit" class="payment-toggle py-3 px-4 rounded-xl border-2 border-gray-200 flex items-center justify-center space-x-2 hover:border-amber-400">
+                            <i class="fas fa-credit-card text-red-600"></i>
+                            <span class="font-semibold">Crédito</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="purchasePaymentMethod" value="cash">
+                </div>
+
+                <div id="purchaseCreditDetails" class="hidden bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">
+                    <h4 class="font-semibold text-red-800 text-sm flex items-center">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Datos del Crédito con Proveedor
+                    </h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-gray-600 block mb-1">Fecha de vencimiento</label>
+                            <input type="date" id="purchaseDueDate" 
+                                class="w-full px-3 py-2 rounded-lg border border-red-200 focus:border-red-500 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-600 block mb-1">Monto inicial (opcional)</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2 text-gray-500 text-sm">S/</span>
+                                <input type="number" id="purchaseInitialPayment" placeholder="Anticipo" 
+                                    class="w-full pl-8 pr-3 py-2 rounded-lg border border-red-200 focus:border-red-500 outline-none text-sm"
+                                    oninput="updatePurchaseTotal()">
+                            </div>
+                        </div>
+                    </div>
+                    <textarea id="purchaseCreditNotes" placeholder="Notas sobre el crédito..." rows="2"
+                        class="w-full px-3 py-2 rounded-lg border border-red-200 focus:border-red-500 outline-none resize-none text-sm"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-3">Seleccionar Productos *</label>
+                    <p class="text-xs text-gray-500 mb-3">Puedes seleccionar múltiples tipos de piñas</p>
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="productSelectionGrid">
+                        <!-- Productos de selección (igual que antes) -->
+                        <div class="multi-select-item border-2 border-gray-200 rounded-xl p-3 cursor-pointer hover:border-amber-300" 
+                             onclick="toggleProductSelection('C6', this)" data-type="C6">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-500 flex items-center justify-center text-white font-bold text-xs">C6</div>
+                                <input type="checkbox" class="product-checkbox w-4 h-4 text-amber-500 rounded focus:ring-amber-500" style="pointer-events: none;">
+                            </div>
+                            <p class="text-xs font-semibold text-gray-700">Extra Grande</p>
+                            <div class="mt-2 hidden product-inputs space-y-2">
+                                <input type="number" placeholder="Cantidad" min="1" 
+                                    class="w-full px-2 py-1 text-sm border rounded focus:border-amber-500 outline-none qty-input" 
+                                    oninput="updatePurchaseTotal()" onclick="event.stopPropagation()">
+                                <div class="relative">
+                                    <span class="absolute left-2 top-1.5 text-gray-400 text-xs">S/</span>
+                                    <input type="number" placeholder="Precio unit." min="0" step="0.01" 
+                                        class="w-full pl-6 pr-2 py-1 text-sm border rounded focus:border-amber-500 outline-none price-input" 
+                                        oninput="updatePurchaseTotal()" onclick="event.stopPropagation()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="multi-select-item border-2 border-gray-200 rounded-xl p-3 cursor-pointer hover:border-amber-300" 
+                             onclick="toggleProductSelection('C8', this)" data-type="C8">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center text-white font-bold text-xs">C8</div>
+                                <input type="checkbox" class="product-checkbox w-4 h-4 text-amber-500 rounded focus:ring-amber-500" style="pointer-events: none;">
+                            </div>
+                            <p class="text-xs font-semibold text-gray-700">Grande</p>
+                            <div class="mt-2 hidden product-inputs space-y-2">
+                                <input type="number" placeholder="Cantidad" min="1" 
+                                    class="w-full px-2 py-1 text-sm border rounded focus:border-amber-500 outline-none qty-input" 
+                                    oninput="updatePurchaseTotal()" onclick="event.stopPropagation()">
+                                <div class="relative">
+                                    <span class="absolute left-2 top-1.5 text-gray-400 text-xs">S/</span>
+                                    <input type="number" placeholder="Precio unit." min="0" step="0.01" 
+                                        class="w-full pl-6 pr-2 py-1 text-sm border rounded focus:border-amber-500 outline-none price-input" 
+                                        oninput="updatePurchaseTotal()" onclick="event.stopPropagation()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="multi-select-item border-2 border-gray-200 rounded-xl p-3 cursor-pointer hover:border-amber-300" 
+                             onclick="toggleProductSelection('C10', this)" data-type="C10">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-bold text-xs">C10</div>
+                                <input type="checkbox" class="product-checkbox w-4 h-4 text-amber-500 rounded focus:ring-amber-500" style="pointer-events: none;">
+                            </div>
+                            <p class="text-xs font-semibold text-gray-700">Mediana</p>
+                            <div class="mt-2 hidden product-inputs space-y-2">
+                                <input type="number" placeholder="Cantidad" min="1" 
+                                    class="w-full px-2 py-1 text-sm border rounded focus:border-amber-500 outline-none qty-input" 
+                                    oninput="updatePurchaseTotal()" onclick="event.stopPropagation()">
+                                <div class="relative">
+                                    <span class="absolute left-2 top-1.5 text-gray-400 text-xs">S/</span>
+                                    <input type="number" placeholder="Precio unit." min="0" step="0.01" 
+                                        class="w-full pl-6 pr-2 py-1 text-sm border rounded focus:border-amber-500 outline-none price-input" 
+                                        oninput="updatePurchaseTotal()" onclick="event.stopPropagation()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="multi-select-item border-2 border-gray-200 rounded-xl p-3 cursor-pointer hover:border-amber-300" 
+                             onclick="toggleProductSelection('C12', this)" data-type="C12">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-400 flex items-center justify-center text-white font-bold text-xs">C12</div>
+                                <input type="checkbox" class="product-checkbox w-4 h-4 text-amber-500 rounded focus:ring-amber-500" style="pointer-events: none;">
+                            </div>
+                            <p class="text-xs font-semibold text-gray-700">Chica</p>
+                            <div class="mt-2 hidden product-inputs space-y-2">
+                                <input type="number" placeholder="Cantidad" min="1" 
+                                    class="w-full px-2 py-1 text-sm border rounded focus:border-amber-500 outline-none qty-input" 
+                                    oninput="updatePurchaseTotal()" onclick="event.stopPropagation()">
+                                <div class="relative">
+                                    <span class="absolute left-2 top-1.5 text-gray-400 text-xs">S/</span>
+                                    <input type="number" placeholder="Precio unit." min="0" step="0.01" 
+                                        class="w-full pl-6 pr-2 py-1 text-sm border rounded focus:border-amber-500 outline-none price-input" 
+                                        oninput="updatePurchaseTotal()" onclick="event.stopPropagation()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="multi-select-item border-2 border-gray-200 rounded-xl p-3 cursor-pointer hover:border-amber-300" 
+                             onclick="toggleProductSelection('C14', this)" data-type="C14">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-red-400 to-red-500 flex items-center justify-center text-white font-bold text-xs">C14</div>
+                                <input type="checkbox" class="product-checkbox w-4 h-4 text-amber-500 rounded focus:ring-amber-500" style="pointer-events: none;">
+                            </div>
+                            <p class="text-xs font-semibold text-gray-700">Mini</p>
+                            <div class="mt-2 hidden product-inputs space-y-2">
+                                <input type="number" placeholder="Cantidad" min="1" 
+                                    class="w-full px-2 py-1 text-sm border rounded focus:border-amber-500 outline-none qty-input" 
+                                    oninput="updatePurchaseTotal()" onclick="event.stopPropagation()">
+                                <div class="relative">
+                                    <span class="absolute left-2 top-1.5 text-gray-400 text-xs">S/</span>
+                                    <input type="number" placeholder="Precio unit." min="0" step="0.01" 
+                                        class="w-full pl-6 pr-2 py-1 text-sm border rounded focus:border-amber-500 outline-none price-input" 
+                                        oninput="updatePurchaseTotal()" onclick="event.stopPropagation()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="multi-select-item border-2 border-gray-200 rounded-xl p-3 cursor-pointer hover:border-gray-400 bg-gray-50" 
+                             onclick="toggleProductSelection('DES', this)" data-type="DES">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-white font-bold text-xs">DES</div>
+                                <input type="checkbox" class="product-checkbox w-4 h-4 text-amber-500 rounded focus:ring-amber-500" style="pointer-events: none;">
+                            </div>
+                            <p class="text-xs font-semibold text-gray-700">Desecho</p>
+                            <div class="mt-2 hidden product-inputs space-y-2">
+                                <input type="number" placeholder="Cantidad" min="1" 
+                                    class="w-full px-2 py-1 text-sm border rounded focus:border-amber-500 outline-none qty-input" 
+                                    oninput="updatePurchaseTotal()" onclick="event.stopPropagation()">
+                                <div class="relative">
+                                    <span class="absolute left-2 top-1.5 text-gray-400 text-xs">S/</span>
+                                    <input type="number" placeholder="Precio unit." min="0" step="0.01" 
+                                        class="w-full pl-6 pr-2 py-1 text-sm border rounded focus:border-amber-500 outline-none price-input" 
+                                        oninput="updatePurchaseTotal()" onclick="event.stopPropagation()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border-2 border-amber-200">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-700 font-semibold">Resumen de Compra:</span>
+                        <span class="text-2xl font-bold text-amber-600" id="purchaseTotalDisplay">S/ 0.00</span>
+                    </div>
+                    <div id="purchaseSummaryDetails" class="text-sm text-gray-600 space-y-1">
+                        <p class="italic">Selecciona productos para ver el detalle...</p>
+                    </div>
+                </div>
+
+                <div class="flex space-x-3 pt-2">
+                    <button onclick="closeStockModal()" class="flex-1 py-3 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-colors font-semibold text-gray-700">
+                        Cancelar
+                    </button>
+                    <button onclick="processPurchase()" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all font-semibold shadow-lg">
+                        Registrar Compra
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROVIDER PAYMENT MODAL -->
+    <div id="providerPaymentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 slide-up">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-hand-holding-usd mr-2 text-amber-500"></i>
+                Pago a Proveedor
+            </h3>
+            <div id="providerPaymentDetails" class="mb-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <!-- Dynamic content -->
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Monto a Pagar</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-gray-500">S/</span>
+                        <input type="number" id="providerPaymentAmount" class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 outline-none text-lg font-bold">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Método de Pago</label>
+                    <select id="providerPaymentMethod" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 outline-none">
+                        <option value="cash">Efectivo</option>
+                        <option value="transfer">Transferencia</option>
+                        <option value="check">Cheque</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nota (opcional)</label>
+                    <input type="text" id="providerPaymentNote" placeholder="Ej: Pago parcial, Nota #123..." 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 outline-none">
+                </div>
+                <div class="flex space-x-3 pt-2">
+                    <button onclick="closeProviderPaymentModal()" class="flex-1 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+                    <button onclick="processProviderPayment()" class="flex-1 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-colors font-semibold">
+                        Confirmar Pago
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROVIDER DEBTS DETAIL MODAL -->
+    <div id="providerDebtsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto slide-up">
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Deudas con Proveedores</h3>
+                <button onclick="closeProviderDebtsModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div id="providerDebtsList" class="space-y-4">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLIENT PAYMENT MODAL -->
+    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 slide-up">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Registrar Pago</h3>
+            <div id="paymentDetails" class="mb-4 p-4 bg-gray-50 rounded-lg"></div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Monto a Pagar</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-gray-500">S/</span>
+                        <input type="number" id="paymentAmount" class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 outline-none text-lg font-bold">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Método de Pago</label>
+                    <select id="paymentMethod" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 outline-none">
+                        <option value="cash">Efectivo</option>
+                        <option value="transfer">Transferencia</option>
+                    </select>
+                </div>
+                <div class="flex space-x-3 pt-2">
+                    <button onclick="closePaymentModal()" class="flex-1 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+                    <button onclick="processPayment()" class="flex-1 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">Confirmar Pago</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="fixed top-20 right-4 transform translate-x-full transition-transform duration-300 z-50 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center space-x-3">
+        <i id="toastIcon" class="fas fa-check-circle text-green-400"></i>
+        <div>
+            <p class="font-semibold text-sm" id="toastTitle">Éxito</p>
+            <p class="text-xs text-gray-300" id="toastMessage">Operación completada</p>
+        </div>
+    </div>
+
+    <script>
+        // Data Management
+        let sales = JSON.parse(localStorage.getItem('pineappleSales')) || [];
+        let stock = JSON.parse(localStorage.getItem('pineappleStock')) || { C6: 0, C8: 0, C10: 0, C12: 0, C14: 0, DES: 0 };
+        let stockHistory = JSON.parse(localStorage.getItem('stockHistory')) || [];
+        let purchases = JSON.parse(localStorage.getItem('pineapplePurchases')) || [];
+        let credits = JSON.parse(localStorage.getItem('pineappleCredits')) || [];
+        let profile = JSON.parse(localStorage.getItem('businessProfile')) || {};
+        let prices = JSON.parse(localStorage.getItem('pineapplePrices')) || { C6: 25, C8: 20, C10: 15, C12: 12, C14: 8, DES: 3 };
+        let currentCreditId = null;
+        let currentPurchaseId = null;
+        let selectedProducts = new Set();
+
+        // Carrito de ventas
+        let saleCart = [];
+        let manualTotal = null;
+
+        const typeConfig = {
+            'C6': { color: '#fbbf24', label: 'C6 - Extra Grande', bg: 'bg-yellow-400', text: 'Extra Grande' },
+            'C8': { color: '#f59e0b', label: 'C8 - Grande', bg: 'bg-orange-400', text: 'Grande' },
+            'C10': { color: '#f97316', label: 'C10 - Mediana', bg: 'bg-orange-500', text: 'Mediana' },
+            'C12': { color: '#ea580c', label: 'C12 - Chica', bg: 'bg-orange-600', text: 'Chica' },
+            'C14': { color: '#dc2626', label: 'C14 - Mini', bg: 'bg-red-500', text: 'Mini' },
+            'DES': { color: '#6b7280', label: 'DES - Desecho', bg: 'bg-gray-500', text: 'Desecho' }
+        };
+
+        // Navigation
+        function switchScreen(screenName) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(`screen-${screenName}`).classList.add('active');
+            document.querySelector(`[data-screen="${screenName}"]`).classList.add('active');
+            
+            if (screenName === 'inicio') updateDashboard();
+            if (screenName === 'ventas') {
+                updateSalesScreen();
+                updatePriceDisplays();
+                updatePaymentSummary();
+            }
+            if (screenName === 'stock') updateStockScreen();
+            if (screenName === 'credito') updateCreditScreen();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            updateDashboard();
+            initHomeCharts();
+            
+            if (profile.businessName) document.getElementById('businessName').value = profile.businessName;
+            if (profile.ownerName) document.getElementById('ownerName').value = profile.ownerName;
+            if (profile.phone) document.getElementById('businessPhone').value = profile.phone;
+            
+            Object.keys(prices).forEach(type => {
+                const el = document.getElementById(`price${type}`);
+                if (el) el.value = prices[type];
+            });
+            
+            updatePriceDisplays();
+        });
+
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('headerDate').textContent = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('headerTime').textContent = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function updatePriceDisplays() {
+            Object.keys(prices).forEach(type => {
+                const el = document.getElementById(`price-display-${type}`);
+                if (el) el.textContent = prices[type];
+            });
+        }
+
+        function updatePriceDisplay(type, value) {
+            prices[type] = parseFloat(value) || 0;
+            localStorage.setItem('pineapplePrices', JSON.stringify(prices));
+            const el = document.getElementById(`price-display-${type}`);
+            if (el) el.textContent = prices[type];
+        }
+
+        // Dashboard Functions - ACTUALIZADO CON DATOS SEMANALES
+        function updateDashboard() {
+            const today = new Date().toDateString();
+            const todaySales = sales.filter(s => new Date(s.timestamp).toDateString() === today);
+            
+            // Datos del DÍA (sección naranja superior - NO SE TOCA)
+            const todayTotal = todaySales.reduce((sum, s) => sum + s.total, 0);
+            const todayProfit = todaySales.reduce((sum, s) => sum + (s.profit || 0), 0);
+            const todayMargin = todaySales.length > 0 && todaySales.some(s => s.profit !== undefined)
+                ? (todaySales.reduce((sum, s) => sum + (s.profitMargin || 0), 0) / todaySales.filter(s => s.profitMargin !== undefined).length)
+                : 0;
+            
+            const providerDebt = purchases.filter(p => p.status === 'pending' || p.remaining > 0)
+                .reduce((sum, p) => sum + (p.remaining || 0), 0);
+            
+            const lowStock = Object.entries(stock).filter(([type, qty]) => qty < 10).length;
+            
+            // Actualizar sección naranja (DÍA)
+            document.getElementById('dashTodaySales').textContent = `S/ ${todayTotal.toFixed(2)}`;
+            document.getElementById('dashProviderDebt').textContent = `S/ ${providerDebt.toFixed(2)}`;
+            document.getElementById('dashLowStock').textContent = lowStock;
+            document.getElementById('dashTodayMargin').textContent = `${todayMargin.toFixed(1)}%`;
+            
+            // Datos de la SEMANA (nuevas 4 tarjetas inferiores)
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            const weekSales = sales.filter(s => new Date(s.timestamp) >= weekAgo);
+            
+            const weekTotal = weekSales.reduce((sum, s) => sum + s.total, 0);
+            const weekPineapples = weekSales.reduce((sum, s) => sum + (s.items ? s.items.reduce((a, b) => a + b.quantity, 0) : s.quantity), 0);
+            const weekProfit = weekSales.reduce((sum, s) => sum + (s.profit || 0), 0);
+            const weekMargin = weekSales.length > 0 && weekSales.some(s => s.profit !== undefined)
+                ? (weekSales.reduce((sum, s) => sum + (s.profitMargin || 0), 0) / weekSales.filter(s => s.profitMargin !== undefined).length)
+                : 0;
+            
+            const pendingCredits = credits.filter(c => c.status === 'pending').reduce((sum, c) => sum + c.remaining, 0);
+            
+            // Actualizar tarjetas semanales
+            document.getElementById('dashWeekSales').textContent = `S/ ${weekTotal.toFixed(2)}`;
+            document.getElementById('weekSalesTrend').textContent = `${weekSales.length} ventas esta semana`;
+            document.getElementById('dashWeekPineapples').textContent = weekPineapples;
+            document.getElementById('dashPendingAmount').textContent = `S/ ${pendingCredits.toFixed(2)}`;
+            document.getElementById('dashWeekProfit').textContent = `S/ ${weekProfit.toFixed(2)}`;
+            document.getElementById('weekMarginText').textContent = `${weekMargin.toFixed(1)}% margen promedio`;
+            
+            updateHomeCharts();
+            
+            const badge = document.getElementById('creditBadge');
+            const activeCredits = credits.filter(c => c.status === 'pending').length;
+            if (activeCredits > 0) badge.classList.remove('hidden');
+            else badge.classList.add('hidden');
+        }
+
+        // Resto de funciones (updatePaymentSummary, funciones del carrito, etc.) se mantienen igual...
+        // [Aquí irían todas las demás funciones que ya estaban implementadas]
+
+        // Funciones del Carrito de Ventas
+        function addToCart(type) {
+            if (stock[type] <= 0) {
+                showToast('Sin Stock', `No hay unidades de ${type} disponibles`, 'error');
+                return;
+            }
+
+            const existingItem = saleCart.find(item => item.type === type);
+            
+            if (existingItem) {
+                if (existingItem.quantity >= stock[type]) {
+                    showToast('Límite Alcanzado', `Solo hay ${stock[type]} unidades de ${type} disponibles`, 'error');
+                    return;
+                }
+                existingItem.quantity += 1;
+            } else {
+                saleCart.push({
+                    type: type,
+                    quantity: 1,
+                    price: prices[type] || 0
+                });
+            }
+            
+            manualTotal = null;
+            updateCartDisplay();
+            showToast('Agregado', `${type} agregado al carrito`);
+        }
+
+        function removeFromCart(index) {
+            saleCart.splice(index, 1);
+            manualTotal = null;
+            updateCartDisplay();
+        }
+
+        function updateCartItemQuantity(index, newQty) {
+            const item = saleCart[index];
+            const maxStock = stock[item.type];
+            
+            if (newQty <= 0) {
+                removeFromCart(index);
+                return;
+            }
+            
+            if (newQty > maxStock) {
+                showToast('Stock Insuficiente', `Solo hay ${maxStock} unidades disponibles`, 'error');
+                newQty = maxStock;
+            }
+            
+            item.quantity = newQty;
+            manualTotal = null;
+            updateCartDisplay();
+        }
+
+        function updateCartItemPrice(index, newPrice) {
+            saleCart[index].price = parseFloat(newPrice) || 0;
+            manualTotal = null;
+            updateCartDisplay();
+        }
+
+        function updateManualTotal(value) {
+            const newTotal = parseFloat(value);
+            if (isNaN(newTotal) || newTotal < 0) {
+                showToast('Error', 'Ingresa un monto válido', 'error');
+                updateCartDisplay();
+                return;
+            }
+            manualTotal = newTotal;
+            document.getElementById('manualAdjustmentNote').classList.remove('hidden');
+            showToast('Total Actualizado', `Nuevo total: S/ ${newTotal.toFixed(2)}`);
+            updateProfitAnalysis();
+        }
+
+        function getAverageCost(type) {
+            const typePurchases = purchases.filter(p => 
+                p.items && p.items.some(i => i.type === type)
+            );
+            
+            if (typePurchases.length === 0) return 0;
+            
+            let totalCost = 0;
+            let totalQty = 0;
+            
+            typePurchases.forEach(p => {
+                const item = p.items.find(i => i.type === type);
+                if (item) {
+                    totalCost += item.price * item.qty;
+                    totalQty += item.qty;
+                }
+            });
+            
+            return totalQty > 0 ? totalCost / totalQty : 0;
+        }
+
+        function updateProfitAnalysis() {
+            const profitSection = document.getElementById('profitAnalysis');
+            
+            if (saleCart.length === 0) {
+                profitSection.classList.add('hidden');
+                return;
+            }
+            
+            profitSection.classList.remove('hidden');
+            
+            let totalCost = 0;
+            let totalRevenue = 0;
+            let hasCostData = false;
+            
+            saleCart.forEach(item => {
+                const avgCost = getAverageCost(item.type);
+                const itemCost = avgCost * item.quantity;
+                const itemRevenue = item.price * item.quantity;
+                
+                totalCost += itemCost;
+                totalRevenue += itemRevenue;
+                
+                if (avgCost > 0) hasCostData = true;
+            });
+            
+            const finalRevenue = manualTotal !== null ? manualTotal : totalRevenue;
+            const profit = finalRevenue - totalCost;
+            const margin = totalCost > 0 ? ((profit / totalCost) * 100) : 0;
+            
+            document.getElementById('estimatedCost').textContent = `S/ ${totalCost.toFixed(2)}`;
+            document.getElementById('estimatedProfit').textContent = `S/ ${profit.toFixed(2)}`;
+            
+            const marginEl = document.getElementById('estimatedMargin');
+            marginEl.textContent = `${margin.toFixed(1)}%`;
+            
+            marginEl.className = 'profit-indicator ' + 
+                (profit > 0 ? 'profit-positive' : profit < 0 ? 'profit-negative' : 'profit-warning');
+            
+            const lossWarning = document.getElementById('lossWarning');
+            if (profit < 0) {
+                lossWarning.classList.remove('hidden');
+            } else {
+                lossWarning.classList.add('hidden');
+            }
+            
+            if (!hasCostData) {
+                document.getElementById('estimatedCost').textContent = 'S/ 0.00 (Sin compras)';
+                document.getElementById('estimatedCost').classList.add('text-gray-400');
+            } else {
+                document.getElementById('estimatedCost').classList.remove('text-gray-400');
+            }
+        }
+
+        function updateCartDisplay() {
+            const cartContainer = document.getElementById('cartItems');
+            const cartCount = document.getElementById('cartCount');
+            const btnComplete = document.getElementById('btnCompleteSale');
+            const manualNote = document.getElementById('manualAdjustmentNote');
+            
+            const totalItems = saleCart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCount.textContent = `${totalItems} item${totalItems !== 1 ? 's' : ''}`;
+            
+            btnComplete.disabled = saleCart.length === 0;
+            
+            if (saleCart.length === 0) {
+                cartContainer.innerHTML = `
+                    <div id="emptyCart" class="text-center py-12 text-gray-400">
+                        <i class="fas fa-shopping-basket text-4xl mb-3 opacity-30"></i>
+                        <p class="text-sm">El carrito está vacío</p>
+                        <p class="text-xs mt-1">Selecciona productos arriba para comenzar</p>
+                    </div>
+                `;
+                document.getElementById('cartCalculatedSubtotal').textContent = 'S/ 0.00';
+                document.getElementById('cartTotalPineapples').textContent = '0';
+                document.getElementById('cartTotalEditable').value = '0.00';
+                manualNote.classList.add('hidden');
+                manualTotal = null;
+                document.getElementById('profitAnalysis').classList.add('hidden');
+                return;
+            }
+            
+            cartContainer.innerHTML = saleCart.map((item, index) => {
+                const avgCost = getAverageCost(item.type);
+                const itemProfit = (item.price - avgCost) * item.quantity;
+                const itemMargin = avgCost > 0 ? ((item.price - avgCost) / avgCost) * 100 : 0;
+                const profitClass = itemProfit > 0 ? 'text-green-600' : itemProfit < 0 ? 'text-red-600' : 'text-gray-600';
+                
+                return `
+                <div class="cart-item bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full ${typeConfig[item.type].bg} flex items-center justify-center text-white font-bold text-sm">
+                                ${item.type}
+                            </div>
+                            <div>
+                                <p class="font-bold text-gray-800">${typeConfig[item.type].text}</p>
+                                <p class="text-xs text-gray-500">Stock: ${stock[item.type]} unidades</p>
+                            </div>
+                        </div>
+                        <button onclick="removeFromCart(${index})" class="text-red-400 hover:text-red-600 transition-colors p-1">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-gray-500 block mb-1">Cantidad</label>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="updateCartItemQuantity(${index}, ${item.quantity - 1})" 
+                                    class="quantity-btn w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600">
+                                    <i class="fas fa-minus text-xs"></i>
+                                </button>
+                                <input type="number" value="${item.quantity}" min="1" max="${stock[item.type]}"
+                                    onchange="updateCartItemQuantity(${index}, parseInt(this.value) || 1)"
+                                    class="w-16 text-center font-bold text-gray-800 border border-gray-200 rounded-lg py-1">
+                                <button onclick="updateCartItemQuantity(${index}, ${item.quantity + 1})" 
+                                    class="quantity-btn w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600">
+                                    <i class="fas fa-plus text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 block mb-1">Precio Unit. (S/)</label>
+                            <div class="relative">
+                                <span class="absolute left-2 top-1.5 text-gray-400 text-xs">S/</span>
+                                <input type="number" value="${item.price}" min="0" step="0.01"
+                                    onchange="updateCartItemPrice(${index}, this.value)"
+                                    class="w-full pl-6 pr-2 py-1 border border-gray-200 rounded-lg focus:border-amber-500 outline-none font-semibold text-gray-800">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 pt-3 border-t border-gray-100">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600">Subtotal venta:</span>
+                            <span class="font-bold text-amber-600">S/ ${(item.quantity * item.price).toFixed(2)}</span>
+                        </div>
+                        ${avgCost > 0 ? `
+                        <div class="flex justify-between items-center text-xs mt-1">
+                            <span class="text-gray-500">Costo estimado: S/ ${(avgCost * item.quantity).toFixed(2)}</span>
+                            <span class="${profitClass} font-medium">
+                                ${itemProfit >= 0 ? '+' : ''}S/ ${itemProfit.toFixed(2)} (${itemMargin >= 0 ? '+' : ''}${itemMargin.toFixed(0)}%)
+                            </span>
+                        </div>
+                        ` : '<p class="text-xs text-gray-400 mt-1 italic">Sin historial de compras para calcular costo</p>'}
+                    </div>
+                </div>
+            `}).join('');
+            
+            const calculatedSubtotal = saleCart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+            const totalPineapples = saleCart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            document.getElementById('cartCalculatedSubtotal').textContent = `S/ ${calculatedSubtotal.toFixed(2)}`;
+            document.getElementById('cartTotalPineapples').textContent = totalPineapples;
+            
+            const displayTotal = manualTotal !== null ? manualTotal : calculatedSubtotal;
+            document.getElementById('cartTotalEditable').value = displayTotal.toFixed(2);
+            
+            if (manualTotal !== null && Math.abs(manualTotal - calculatedSubtotal) > 0.01) {
+                manualNote.classList.remove('hidden');
+            } else {
+                manualNote.classList.add('hidden');
+            }
+            
+            updateProfitAnalysis();
+        }
+
+        function toggleCreditSection() {
+            const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+            const creditSection = document.getElementById('creditSection');
+            
+            if (paymentMethod === 'credit') {
+                creditSection.classList.remove('hidden');
+            } else {
+                creditSection.classList.add('hidden');
+            }
+        }
+
+        function processMultiSale() {
+            if (saleCart.length === 0) {
+                showToast('Error', 'El carrito está vacío', 'error');
+                return;
+            }
+            
+            for (let item of saleCart) {
+                if (stock[item.type] < item.quantity) {
+                    showToast('Stock Insuficiente', `Solo tienes ${stock[item.type]} unidades de ${item.type}`, 'error');
+                    return;
+                }
+            }
+            
+            const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+            const calculatedSubtotal = saleCart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+            const finalTotal = manualTotal !== null ? manualTotal : calculatedSubtotal;
+            const totalPineapples = saleCart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            let totalCost = 0;
+            saleCart.forEach(item => {
+                const avgCost = getAverageCost(item.type);
+                totalCost += avgCost * item.quantity;
+            });
+            
+            const profit = finalTotal - totalCost;
+            const profitMargin = totalCost > 0 ? ((profit / totalCost) * 100) : 0;
+            
+            const sale = {
+                id: Date.now(),
+                items: saleCart.map(item => ({...item})),
+                calculatedSubtotal: calculatedSubtotal,
+                manualTotal: manualTotal,
+                total: finalTotal,
+                cost: totalCost,
+                profit: profit,
+                profitMargin: profitMargin,
+                paymentMethod: paymentMethod,
+                timestamp: new Date().toISOString()
+            };
+            
+            if (paymentMethod === 'credit') {
+                const clientName = document.getElementById('creditClient').value.trim();
+                if (!clientName) {
+                    showToast('Error', 'Ingresa el nombre del cliente para crédito', 'error');
+                    return;
+                }
+                
+                const credit = {
+                    id: Date.now(),
+                    saleId: sale.id,
+                    clientName: clientName,
+                    phone: document.getElementById('creditPhone').value,
+                    notes: document.getElementById('creditNotes').value,
+                    totalAmount: finalTotal,
+                    remaining: finalTotal,
+                    status: 'pending',
+                    createdAt: new Date().toISOString(),
+                    payments: []
+                };
+                credits.unshift(credit);
+                localStorage.setItem('pineappleCredits', JSON.stringify(credits));
+            }
+            
+            saleCart.forEach(item => {
+                stock[item.type] -= item.quantity;
+                
+                stockHistory.unshift({
+                    id: Date.now() + Math.random(),
+                    type: item.type,
+                    qty: -item.quantity,
+                    reason: 'Venta',
+                    timestamp: new Date().toISOString()
+                });
+            });
+            localStorage.setItem('pineappleStock', JSON.stringify(stock));
+            localStorage.setItem('stockHistory', JSON.stringify(stockHistory));
+            
+            sales.unshift(sale);
+            localStorage.setItem('pineappleSales', JSON.stringify(sales));
+            
+            const itemsCount = saleCart.reduce((sum, item) => sum + item.quantity, 0);
+            const adjustmentMsg = manualTotal !== null ? ` (Ajustado de S/ ${calculatedSubtotal.toFixed(2)})` : '';
+            const profitMsg = totalCost > 0 ? ` | Ganancia: S/ ${profit.toFixed(2)} (${profitMargin.toFixed(1)}%)` : '';
+            
+            saleCart = [];
+            manualTotal = null;
+            updateCartDisplay();
+            
+            document.getElementById('creditClient').value = '';
+            document.getElementById('creditPhone').value = '';
+            document.getElementById('creditNotes').value = '';
+            document.querySelector('input[name="payment"][value="cash"]').checked = true;
+            toggleCreditSection();
+            
+            showToast('Venta Completada', `Venta de ${itemsCount} piñas por S/ ${finalTotal.toFixed(2)}${adjustmentMsg}${profitMsg}`);
+            updateSalesScreen();
+            updateDashboard();
+            updatePaymentSummary();
+        }
+
+        function updateSalesScreen() {
+            const today = new Date().toDateString();
+            const todaySales = sales.filter(s => new Date(s.timestamp).toDateString() === today);
+            
+            const list = document.getElementById('todaySalesList');
+            document.getElementById('todaySalesCount').textContent = `${todaySales.length} venta${todaySales.length !== 1 ? 's' : ''}`;
+            
+            if (todaySales.length === 0) {
+                list.innerHTML = '<p class="text-center text-gray-400 text-sm py-4">No hay ventas registradas hoy</p>';
+            } else {
+                list.innerHTML = todaySales.map(s => {
+                    const itemsSummary = s.items 
+                        ? s.items.map(i => `${i.quantity} ${i.type}`).join(', ')
+                        : `${s.quantity} ${s.type}`;
+                    const time = new Date(s.timestamp).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
+                    const adjustmentBadge = s.manualTotal !== null ? `<span class="ml-2 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Ajustado</span>` : '';
+                    
+                    let paymentIcon = '';
+                    let paymentClass = '';
+                    if (s.paymentMethod === 'cash') {
+                        paymentIcon = '<i class="fas fa-money-bill-wave text-green-500 mr-1"></i>';
+                        paymentClass = 'text-green-600';
+                    } else if (s.paymentMethod === 'transfer') {
+                        paymentIcon = '<i class="fas fa-mobile-alt text-blue-500 mr-1"></i>';
+                        paymentClass = 'text-blue-600';
+                    } else {
+                        paymentIcon = '<i class="fas fa-hand-holding-usd text-red-500 mr-1"></i>';
+                        paymentClass = 'text-red-600';
+                    }
+                    
+                    let profitBadge = '';
+                    if (s.profit !== undefined) {
+                        const profitClass = s.profit > 0 ? 'bg-green-100 text-green-700' : s.profit < 0 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700';
+                        const profitIcon = s.profit > 0 ? 'fa-arrow-up' : s.profit < 0 ? 'fa-arrow-down' : 'fa-minus';
+                        profitBadge = `<span class="ml-2 text-xs ${profitClass} px-1.5 py-0.5 rounded"><i class="fas ${profitIcon} mr-1"></i>S/ ${Math.abs(s.profit).toFixed(0)}</span>`;
+                    }
+                    
+                    return `
+                        <div class="flex justify-between items-center p-3 border-b border-gray-100 hover:bg-gray-50 rounded-lg">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-gray-800 truncate">${itemsSummary}${adjustmentBadge}${profitBadge}</p>
+                                <p class="text-xs text-gray-500">${time} • ${paymentIcon}<span class="${paymentClass}">${s.paymentMethod === 'cash' ? 'Efectivo' : s.paymentMethod === 'transfer' ? 'Yape/Plin' : 'Crédito'}</span></p>
+                            </div>
+                            <span class="font-bold text-gray-800 ml-2">S/ ${s.total.toFixed(2)}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            const total = todaySales.reduce((sum, s) => sum + s.total, 0);
+            const totalProfit = todaySales.reduce((sum, s) => sum + (s.profit || 0), 0);
+            document.getElementById('todayTotalSales').textContent = `S/ ${total.toFixed(2)}`;
+            document.getElementById('todayTotalProfit').textContent = `S/ ${totalProfit.toFixed(2)}`;
+        }
+
+        // STOCK FUNCTIONS
+        function updateStockScreen() {
+            Object.keys(stock).forEach(type => {
+                const el = document.getElementById(`stock${type}`);
+                if (el) el.textContent = stock[type];
+            });
+            
+            const maxStock = Math.max(...Object.values(stock), 100);
+            const bars = document.getElementById('stockBars');
+            bars.innerHTML = Object.entries(stock).map(([type, qty]) => {
+                const percentage = (qty / maxStock) * 100;
+                const color = type === 'DES' ? 'bg-gray-500' : typeConfig[type].bg;
+                return `
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 text-sm font-bold text-gray-700">${type}</div>
+                        <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
+                            <div class="${color} h-full rounded-full stock-bar relative" style="width: ${percentage}%">
+                                ${qty < 10 ? '<span class="absolute right-0 top-0 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>' : ''}
+                            </div>
+                        </div>
+                        <div class="w-16 text-right font-bold ${qty < 10 ? 'text-red-600' : 'text-gray-700'}">${qty}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            updateProviderDebtSummary();
+            renderPurchaseHistory();
+        }
+
+        function updateProviderDebtSummary() {
+            const pendingPurchases = purchases.filter(p => p.remaining > 0);
+            const totalDebt = pendingPurchases.reduce((sum, p) => sum + p.remaining, 0);
+            const uniqueProviders = [...new Set(pendingPurchases.map(p => p.provider))].length;
+            
+            document.getElementById('totalProviderDebt').textContent = `S/ ${totalDebt.toFixed(2)}`;
+            document.getElementById('providerDebtSummary').textContent = 
+                pendingPurchases.length > 0 
+                    ? `${pendingPurchases.length} compras pendientes con ${uniqueProviders} proveedor(es)` 
+                    : 'No hay deudas pendientes';
+        }
+
+        function openStockModal() {
+            document.getElementById('stockModal').classList.remove('hidden');
+            const thirtyDays = new Date();
+            thirtyDays.setDate(thirtyDays.getDate() + 30);
+            document.getElementById('purchaseDueDate').valueAsDate = thirtyDays;
+        }
+
+        function closeStockModal() {
+            document.getElementById('stockModal').classList.add('hidden');
+            document.getElementById('providerName').value = '';
+            document.getElementById('providerPhone').value = '';
+            document.getElementById('purchaseDueDate').value = '';
+            document.getElementById('purchaseInitialPayment').value = '';
+            document.getElementById('purchaseCreditNotes').value = '';
+            
+            selectedProducts.clear();
+            document.querySelectorAll('.multi-select-item').forEach(item => {
+                item.classList.remove('selected');
+                item.querySelector('.product-checkbox').checked = false;
+                item.querySelector('.product-inputs').classList.add('hidden');
+                item.querySelector('.qty-input').value = '';
+                item.querySelector('.price-input').value = '';
+            });
+            
+            setPurchasePayment('cash');
+            updatePurchaseTotal();
+        }
+
+        function toggleProductSelection(type, element) {
+            const checkbox = element.querySelector('.product-checkbox');
+            const inputs = element.querySelector('.product-inputs');
+            
+            if (selectedProducts.has(type)) {
+                selectedProducts.delete(type);
+                element.classList.remove('selected');
+                checkbox.checked = false;
+                inputs.classList.add('hidden');
+            } else {
+                selectedProducts.add(type);
+                element.classList.add('selected');
+                checkbox.checked = true;
+                inputs.classList.remove('hidden');
+                setTimeout(() => inputs.querySelector('.qty-input').focus(), 100);
+            }
+            updatePurchaseTotal();
+        }
+
+        function setPurchasePayment(method) {
+            document.getElementById('purchasePaymentMethod').value = method;
+            document.getElementById('btnCash').classList.toggle('active', method === 'cash');
+            document.getElementById('btnCredit').classList.toggle('active', method === 'credit');
+            
+            const creditDetails = document.getElementById('purchaseCreditDetails');
+            if (method === 'credit') {
+                creditDetails.classList.remove('hidden');
+            } else {
+                creditDetails.classList.add('hidden');
+            }
+            updatePurchaseTotal();
+        }
+
+        function updatePurchaseTotal() {
+            let total = 0;
+            const details = [];
+            
+            selectedProducts.forEach(type => {
+                const item = document.querySelector(`[data-type="${type}"]`);
+                const qty = parseInt(item.querySelector('.qty-input').value) || 0;
+                const price = parseFloat(item.querySelector('.price-input').value) || 0;
+                const subtotal = qty * price;
+                
+                if (qty > 0 && price > 0) {
+                    total += subtotal;
+                    details.push(`${qty} × ${type} @ S/ ${price.toFixed(2)} c/u = S/ ${subtotal.toFixed(2)}`);
+                }
+            });
+            
+            const initialPayment = parseFloat(document.getElementById('purchaseInitialPayment').value) || 0;
+            const finalTotal = total - initialPayment;
+            
+            document.getElementById('purchaseTotalDisplay').textContent = `S/ ${finalTotal.toFixed(2)}`;
+            
+            const summaryEl = document.getElementById('purchaseSummaryDetails');
+            if (details.length === 0) {
+                summaryEl.innerHTML = '<p class="italic">Selecciona productos para ver el detalle...</p>';
+            } else {
+                let html = details.map(d => `<p>• ${d}</p>`).join('');
+                if (initialPayment > 0) {
+                    html += `<p class="text-green-600 font-semibold mt-2">- Anticipo: S/ ${initialPayment.toFixed(2)}</p>`;
+                    html += `<p class="text-amber-700 font-bold mt-1">= Total a pagar: S/ ${finalTotal.toFixed(2)}</p>`;
+                }
+                summaryEl.innerHTML = html;
+            }
+        }
+
+        function processPurchase() {
+            const provider = document.getElementById('providerName').value.trim();
+            if (!provider) {
+                showToast('Error', 'Ingresa el nombre del proveedor', 'error');
+                return;
+            }
+            
+            if (selectedProducts.size === 0) {
+                showToast('Error', 'Selecciona al menos un producto', 'error');
+                return;
+            }
+            
+            const items = [];
+            let hasError = false;
+            
+            selectedProducts.forEach(type => {
+                const item = document.querySelector(`[data-type="${type}"]`);
+                const qty = parseInt(item.querySelector('.qty-input').value);
+                const price = parseFloat(item.querySelector('.price-input').value);
+                
+                if (!qty || qty <= 0 || !price || price <= 0) {
+                    hasError = true;
+                    return;
+                }
+                
+                items.push({ type, qty, price, total: qty * price });
+            });
+            
+            if (hasError) {
+                showToast('Error', 'Completa cantidad y precio para todos los productos seleccionados', 'error');
+                return;
+            }
+            
+            const paymentMethod = document.getElementById('purchasePaymentMethod').value;
+            const grandTotal = items.reduce((sum, item) => sum + item.total, 0);
+            const initialPayment = parseFloat(document.getElementById('purchaseInitialPayment').value) || 0;
+            const remaining = grandTotal - initialPayment;
+            
+            const purchase = {
+                id: Date.now(),
+                provider,
+                phone: document.getElementById('providerPhone').value,
+                items,
+                total: grandTotal,
+                paymentMethod,
+                initialPayment,
+                remaining: remaining,
+                status: remaining <= 0 ? 'paid' : 'pending',
+                dueDate: paymentMethod === 'credit' ? document.getElementById('purchaseDueDate').value : null,
+                creditNotes: document.getElementById('purchaseCreditNotes').value,
+                timestamp: new Date().toISOString(),
+                payments: initialPayment > 0 ? [{
+                    amount: initialPayment,
+                    method: 'cash',
+                    date: new Date().toISOString(),
+                    note: 'Pago inicial'
+                }] : []
+            };
+            
+            items.forEach(item => {
+                stock[item.type] += item.qty;
+            });
+            localStorage.setItem('pineappleStock', JSON.stringify(stock));
+            
+            purchases.unshift(purchase);
+            localStorage.setItem('pineapplePurchases', JSON.stringify(purchases));
+            
+            items.forEach(item => {
+                stockHistory.unshift({
+                    id: Date.now(),
+                    type: item.type,
+                    qty: item.qty,
+                    price: item.price,
+                    provider,
+                    reason: 'Compra',
+                    timestamp: new Date().toISOString()
+                });
+            });
+            localStorage.setItem('stockHistory', JSON.stringify(stockHistory));
+            
+            showToast('Compra Registrada', `Se registró la compra de ${items.length} productos por S/ ${grandTotal.toFixed(2)}`);
+            closeStockModal();
+            updateStockScreen();
+        }
+
+        function renderPurchaseHistory(filter = 'all') {
+            const tbody = document.getElementById('purchaseHistory');
+            let filtered = purchases;
+            
+            if (filter === 'cash') filtered = purchases.filter(p => p.paymentMethod === 'cash');
+            if (filter === 'credit') filtered = purchases.filter(p => p.paymentMethod === 'credit');
+            if (filter === 'pending') filtered = purchases.filter(p => p.remaining > 0);
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400">No hay compras registradas</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filtered.map(p => {
+                const date = new Date(p.timestamp).toLocaleString('es-ES');
+                const products = p.items.map(i => 
+                    `<div class="flex items-center justify-between py-1 border-b border-gray-100 last:border-0">
+                        <span class="font-medium">${i.qty} ${i.type}</span>
+                        <span class="text-amber-600 font-semibold">S/ ${i.price.toFixed(2)} c/u</span>
+                        <span class="text-gray-500 text-xs">= S/ ${i.total.toFixed(2)}</span>
+                    </div>`
+                ).join('');
+                
+                const isPending = p.remaining > 0;
+                const daysSince = Math.floor((new Date() - new Date(p.timestamp)) / (1000 * 60 * 60 * 24));
+                
+                const methodBadge = p.paymentMethod === 'cash' 
+                    ? '<span class="ml-2 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">Contado</span>'
+                    : '<span class="ml-2 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs">Crédito</span>';
+                
+                return `
+                    <tr class="hover:bg-gray-50 ${isPending ? 'bg-yellow-50' : ''}">
+                        <td class="px-6 py-4 text-sm text-gray-600">
+                            ${date}
+                            ${isPending ? `<br><span class="text-xs text-yellow-600">Hace ${daysSince} días</span>` : ''}
+                        </td>
+                        <td class="px-6 py-4 text-sm font-semibold text-gray-800">
+                            ${p.provider}
+                            ${methodBadge}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-600 min-w-[200px]">
+                            <div class="space-y-1">${products}</div>
+                        </td>
+                        <td class="px-6 py-4 text-sm font-bold text-gray-800">S/ ${p.total.toFixed(2)}</td>
+                        <td class="px-6 py-4">
+                            ${isPending ? 
+                                `<span class="text-red-600 font-bold">S/ ${p.remaining.toFixed(2)}</span>` : 
+                                '<span class="text-green-600 font-bold">S/ 0.00</span>'
+                            }
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            ${isPending ? `
+                                <button onclick="openProviderPaymentModal(${p.id})" 
+                                    class="px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs rounded-lg hover:from-amber-600 hover:to-orange-600 transition-colors shadow-md">
+                                    <i class="fas fa-dollar-sign mr-1"></i>Pagar
+                                </button>
+                            ` : `
+                                <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                                    <i class="fas fa-check mr-1"></i>Pagado
+                                </span>
+                            `}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterPurchases(type) {
+            renderPurchaseHistory(type);
+        }
+
+        // PROVIDER PAYMENT FUNCTIONS
+        function openProviderPaymentModal(purchaseId) {
+            currentPurchaseId = purchaseId;
+            const purchase = purchases.find(p => p.id === purchaseId);
+            
+            if (!purchase) return;
+            
+            const products = purchase.items.map(i => `${i.qty} ${i.type} @ S/ ${i.price.toFixed(2)}`).join(', ');
+            
+            document.getElementById('providerPaymentDetails').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-sm text-gray-600">Proveedor: <span class="font-semibold text-gray-800">${purchase.provider}</span></p>
+                    <p class="text-sm text-gray-600">Productos: <span class="font-medium">${products}</span></p>
+                    <p class="text-sm text-gray-600">Total de compra: <span class="font-semibold">S/ ${purchase.total.toFixed(2)}</span></p>
+                    <div class="border-t border-amber-200 pt-2 mt-2">
+                        <p class="text-sm text-gray-600">Pagado hasta ahora: <span class="font-medium text-green-600">S/ ${(purchase.total - purchase.remaining).toFixed(2)}</span></p>
+                        <p class="text-lg font-bold text-red-600 mt-1">Saldo pendiente: S/ ${purchase.remaining.toFixed(2)}</p>
+                    </div>
+                    ${purchase.dueDate ? `<p class="text-xs text-amber-700 mt-1"><i class="fas fa-calendar-alt mr-1"></i>Vence: ${new Date(purchase.dueDate).toLocaleDateString('es-ES')}</p>` : ''}
+                </div>
+            `;
+            
+            document.getElementById('providerPaymentAmount').value = purchase.remaining;
+            document.getElementById('providerPaymentAmount').max = purchase.remaining;
+            document.getElementById('providerPaymentNote').value = '';
+            
+            document.getElementById('providerPaymentModal').classList.remove('hidden');
+        }
+
+        function closeProviderPaymentModal() {
+            document.getElementById('providerPaymentModal').classList.add('hidden');
+            currentPurchaseId = null;
+        }
+
+        function processProviderPayment() {
+            const amount = parseFloat(document.getElementById('providerPaymentAmount').value);
+            const method = document.getElementById('providerPaymentMethod').value;
+            const note = document.getElementById('providerPaymentNote').value;
+            
+            if (!amount || amount <= 0) {
+                showToast('Error', 'Ingresa un monto válido', 'error');
+                return;
+            }
+            
+            const purchase = purchases.find(p => p.id === currentPurchaseId);
+            
+            if (!purchase) {
+                showToast('Error', 'Compra no encontrada', 'error');
+                return;
+            }
+            
+            if (amount > purchase.remaining) {
+                showToast('Error', 'El monto excede el saldo pendiente', 'error');
+                return;
+            }
+            
+            purchase.remaining -= amount;
+            purchase.payments.push({
+                amount: amount,
+                method: method,
+                date: new Date().toISOString(),
+                note: note || 'Pago'
+            });
+            
+            if (purchase.remaining <= 0) {
+                purchase.status = 'paid';
+                purchase.paidAt = new Date().toISOString();
+            }
+            
+            localStorage.setItem('pineapplePurchases', JSON.stringify(purchases));
+            
+            showToast('Pago Registrado', `Se registró el pago de S/ ${amount.toFixed(2)} a ${purchase.provider}`);
+            closeProviderPaymentModal();
+            updateStockScreen();
+            updateDashboard();
+        }
+
+        function showProviderDebts() {
+            const pendingPurchases = purchases.filter(p => p.remaining > 0);
+            
+            if (pendingPurchases.length === 0) {
+                showToast('Información', 'No hay deudas pendientes con proveedores');
+                return;
+            }
+            
+            const container = document.getElementById('providerDebtsList');
+            
+            const byProvider = {};
+            pendingPurchases.forEach(p => {
+                if (!byProvider[p.provider]) {
+                    byProvider[p.provider] = [];
+                }
+                byProvider[p.provider].push(p);
+            });
+            
+            container.innerHTML = Object.entries(byProvider).map(([provider, items]) => {
+                const totalDebt = items.reduce((sum, p) => sum + p.remaining, 0);
+                const oldestDate = Math.min(...items.map(p => new Date(p.timestamp).getTime()));
+                const daysSince = Math.floor((new Date() - oldestDate) / (1000 * 60 * 60 * 24));
+                
+                return `
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">${provider}</h4>
+                                <p class="text-xs text-gray-500">${items.length} compra(s) pendiente(s)</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xl font-bold text-red-600">S/ ${totalDebt.toFixed(2)}</p>
+                                <p class="text-xs text-gray-500">Desde hace ${daysSince} días</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            ${items.map(p => {
+                                const products = p.items.map(i => `${i.qty} ${i.type} @ S/ ${i.price.toFixed(2)}`).join(', ');
+                                return `
+                                    <div class="flex justify-between items-center p-2 bg-white rounded-lg text-sm">
+                                        <div class="flex-1">
+                                            <p class="font-medium text-gray-700">${products}</p>
+                                            <p class="text-xs text-gray-500">${new Date(p.timestamp).toLocaleDateString('es-ES')}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-bold text-red-600">S/ ${p.remaining.toFixed(2)}</p>
+                                            <button onclick="closeProviderDebtsModal(); setTimeout(() => openProviderPaymentModal(${p.id}), 300);" 
+                                                class="text-xs text-amber-600 hover:text-amber-800 underline">
+                                                Pagar
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('providerDebtsModal').classList.remove('hidden');
+        }
+
+        function closeProviderDebtsModal() {
+            document.getElementById('providerDebtsModal').classList.add('hidden');
+        }
+
+        // Credit Functions - ACTUALIZADO CON NUEVOS FILTROS
+        function updateCreditScreen() {
+            const pending = credits.filter(c => c.status === 'pending');
+            const totalDebt = pending.reduce((sum, c) => sum + c.remaining, 0);
+            const activeCredits = pending.length;
+            
+            document.getElementById('totalCreditAmount').textContent = `S/ ${totalDebt.toFixed(2)}`;
+            document.getElementById('activeCreditsCount').textContent = activeCredits;
+            document.getElementById('totalDebtAmount').textContent = `S/ ${totalDebt.toFixed(2)}`;
+            
+            const thisMonth = new Date().getMonth();
+            const collected = credits.reduce((sum, c) => {
+                return sum + c.payments.filter(p => new Date(p.date).getMonth() === thisMonth)
+                    .reduce((s, p) => s + p.amount, 0);
+            }, 0);
+            document.getElementById('collectedThisMonth').textContent = `S/ ${collected.toFixed(2)}`;
+            
+            renderCreditsList('all');
+        }
+
+        function formatDateSpanish(dateString) {
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        }
+
+        // NUEVOS FILTROS DE CRÉDITO
+        function renderCreditsList(filter) {
+            let filtered = credits;
+            
+            if (filter === 'pending') filtered = credits.filter(c => c.status === 'pending');
+            if (filter === 'paid') filtered = credits.filter(c => c.status === 'paid');
+            if (filter === 'high') filtered = credits.filter(c => c.status === 'pending' && c.remaining > 100);
+            if (filter === 'recent') filtered = credits.filter(c => {
+                const days = Math.floor((new Date() - new Date(c.createdAt)) / (1000 * 60 * 60 * 24));
+                return days < 7;
+            });
+            
+            const container = document.getElementById('creditsList');
+            if (filtered.length === 0) {
+                container.innerHTML = '<p class="p-8 text-center text-gray-400">No hay créditos registrados</p>';
+                return;
+            }
+            
+            container.innerHTML = filtered.map(c => {
+                const days = Math.floor((new Date() - new Date(c.createdAt)) / (1000 * 60 * 60 * 24));
+                const isRecent = days < 7;
+                const isHighDebt = c.remaining > 100;
+                
+                const sale = sales.find(s => s.id === c.saleId);
+                const itemsSummary = sale && sale.items 
+                    ? sale.items.map(i => `${i.quantity} ${i.type}`).join(', ')
+                    : 'Venta';
+                
+                const adjustmentBadge = sale && sale.manualTotal !== null ? `<span class="ml-1 text-xs bg-blue-100 text-blue-700 px-1 rounded">Ajustado</span>` : '';
+                
+                const totalPaid = c.payments.reduce((sum, p) => sum + p.amount, 0);
+                const cashPayments = c.payments.filter(p => p.method === 'cash').reduce((sum, p) => sum + p.amount, 0);
+                const transferPayments = c.payments.filter(p => p.method === 'transfer').reduce((sum, p) => sum + p.amount, 0);
+                
+                let paymentHistoryHTML = '';
+                if (c.payments && c.payments.length > 0) {
+                    paymentHistoryHTML = `
+                        <div class="mt-4 bg-gray-50 rounded-xl p-4 border border-gray-200">
+                            <h5 class="font-bold text-gray-800 mb-3 flex items-center text-sm">
+                                <i class="fas fa-history mr-2 text-amber-500"></i>
+                                Historial de Pagos
+                            </h5>
+                            <div class="payment-timeline">
+                                <div class="payment-item credit-initial">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-semibold text-amber-700 text-sm">Crédito Inicial</p>
+                                            <p class="text-xs text-gray-500">${formatDateSpanish(c.createdAt)}</p>
+                                        </div>
+                                        <span class="font-bold text-amber-700">S/ ${c.totalAmount.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                                
+                                ${c.payments.map((payment, idx) => `
+                                    <div class="payment-item">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <p class="font-semibold text-green-700 text-sm">
+                                                    <i class="fas fa-check-circle mr-1"></i>
+                                                    Pago #${idx + 1} 
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${payment.method === 'cash' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}">
+                                                        <i class="fas ${payment.method === 'cash' ? 'fa-money-bill-wave' : 'fa-mobile-alt'} mr-1"></i>
+                                                        ${payment.method === 'cash' ? 'Efectivo' : 'Transferencia'}
+                                                    </span>
+                                                </p>
+                                                <p class="text-xs text-gray-500">${formatDateSpanish(payment.date)}</p>
+                                                ${payment.note ? `<p class="text-xs text-gray-400 italic">"${payment.note}"</p>` : ''}
+                                            </div>
+                                            <span class="font-bold text-green-600">- S/ ${payment.amount.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                                
+                                ${c.status === 'pending' ? `
+                                    <div class="payment-item remaining">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <p class="font-semibold text-red-700 text-sm">
+                                                    <i class="fas fa-clock mr-1"></i>
+                                                    Saldo Pendiente
+                                                </p>
+                                                <p class="text-xs text-gray-500">Actual</p>
+                                            </div>
+                                            <span class="font-bold text-red-600">S/ ${c.remaining.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <div class="payment-item">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <p class="font-semibold text-green-700 text-sm">
+                                                    <i class="fas fa-check-double mr-1"></i>
+                                                    Pagado Completamente
+                                                </p>
+                                                <p class="text-xs text-gray-500">${c.paidAt ? formatDateSpanish(c.paidAt) : ''}</p>
+                                            </div>
+                                            <span class="font-bold text-green-600">S/ 0.00</span>
+                                        </div>
+                                    </div>
+                                `}
+                            </div>
+                            
+                            <div class="mt-4 pt-3 border-t border-gray-200">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Total Pagado:</span>
+                                    <span class="font-bold text-green-600">S/ ${totalPaid.toFixed(2)}</span>
+                                </div>
+                                ${(cashPayments > 0 || transferPayments > 0) ? `
+                                <div class="mt-3 pt-3 border-t border-gray-200 bg-gray-100 rounded-lg p-3">
+                                    <p class="text-xs font-semibold text-gray-700 mb-2">Desglose por método:</p>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600 flex items-center"><i class="fas fa-money-bill-wave text-green-500 mr-1"></i> Efectivo:</span>
+                                        <span class="font-bold text-green-600">S/ ${cashPayments.toFixed(2)}</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm mt-1">
+                                        <span class="text-gray-600 flex items-center"><i class="fas fa-mobile-alt text-blue-500 mr-1"></i> Transferencia:</span>
+                                        <span class="font-bold text-blue-600">S/ ${transferPayments.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                                ` : ''}
+                                <div class="flex justify-between text-sm mt-2">
+                                    <span class="text-gray-600">Saldo Pendiente:</span>
+                                    <span class="font-bold ${c.status === 'pending' ? 'text-red-600' : 'text-green-600'}">
+                                        S/ ${c.remaining.toFixed(2)}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between text-sm mt-1 font-semibold">
+                                    <span class="text-gray-700">Total Deuda:</span>
+                                    <span class="text-gray-800">S/ ${c.totalAmount.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    paymentHistoryHTML = `
+                        <div class="mt-4 bg-gray-50 rounded-xl p-4 border border-gray-200">
+                            <h5 class="font-bold text-gray-800 mb-3 flex items-center text-sm">
+                                <i class="fas fa-history mr-2 text-amber-500"></i>
+                                Historial de Pagos
+                            </h5>
+                            <div class="payment-timeline">
+                                <div class="payment-item credit-initial">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-semibold text-amber-700 text-sm">Crédito Inicial</p>
+                                            <p class="text-xs text-gray-500">${formatDateSpanish(c.createdAt)}</p>
+                                        </div>
+                                        <span class="font-bold text-amber-700">S/ ${c.totalAmount.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                                <div class="payment-item remaining">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-semibold text-red-700 text-sm">
+                                                <i class="fas fa-clock mr-1"></i>
+                                                Saldo Pendiente
+                                            </p>
+                                            <p class="text-xs text-gray-500">Sin pagos registrados</p>
+                                        </div>
+                                        <span class="font-bold text-red-600">S/ ${c.remaining.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Badge según el tipo de deuda
+                let statusBadge = '';
+                if (c.status === 'paid') {
+                    statusBadge = '<span class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-medium"><i class="fas fa-check mr-1"></i>Pagado</span>';
+                } else if (isHighDebt) {
+                    statusBadge = '<span class="text-xs px-3 py-1 rounded-full bg-red-100 text-red-700 font-medium"><i class="fas fa-exclamation-circle mr-1"></i>Deuda Alta</span>';
+                } else if (isRecent) {
+                    statusBadge = '<span class="text-xs px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-medium"><i class="fas fa-clock mr-1"></i>Reciente</span>';
+                } else {
+                    statusBadge = '<span class="text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 font-medium"><i class="fas fa-hourglass-half mr-1"></i>Pendiente</span>';
+                }
+                
+                return `
+                    <div class="p-6 hover:bg-gray-50 transition-colors ${isHighDebt ? 'bg-red-50' : ''} border-b border-gray-100 last:border-b-0">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">${c.clientName}</h4>
+                                <p class="text-xs text-gray-500">${c.phone || 'Sin teléfono'} • Hace ${days} días</p>
+                                <p class="text-xs text-gray-600 mt-1">${itemsSummary}${adjustmentBadge}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-bold ${c.status === 'paid' ? 'text-green-600' : isHighDebt ? 'text-red-600' : 'text-gray-800'}">
+                                    S/ ${c.remaining.toFixed(2)}
+                                </p>
+                                <p class="text-xs text-gray-500">de S/ ${c.totalAmount.toFixed(2)}</p>
+                            </div>
+                        </div>
+                        ${c.notes ? `<p class="text-xs text-gray-600 mb-3 italic bg-gray-100 p-2 rounded">"${c.notes}"</p>` : ''}
+                        
+                        ${paymentHistoryHTML}
+                        
+                        <div class="flex justify-between items-center mt-4">
+                            ${statusBadge}
+                            ${c.status === 'pending' ? `
+                                <button onclick="openPaymentModal(${c.id})" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all shadow-md font-medium">
+                                    <i class="fas fa-plus mr-1"></i>Registrar Pago
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterCredits(type) {
+            renderCreditsList(type);
+        }
+
+        function openPaymentModal(creditId) {
+            currentCreditId = creditId;
+            const credit = credits.find(c => c.id === creditId);
+            
+            const sale = sales.find(s => s.id === credit.saleId);
+            const itemsSummary = sale && sale.items 
+                ? sale.items.map(i => `${i.quantity} ${i.type}`).join(', ')
+                : '';
+            
+            const adjustmentInfo = sale && sale.manualTotal !== null 
+                ? `<p class="text-xs text-blue-600">Total ajustado manualmente (Calculado: S/ ${sale.calculatedSubtotal.toFixed(2)})</p>` 
+                : '';
+            
+            const totalPaid = credit.payments.reduce((sum, p) => sum + p.amount, 0);
+            
+            document.getElementById('paymentDetails').innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-sm text-gray-600">Cliente: <span class="font-semibold text-gray-800">${credit.clientName}</span></p>
+                    <p class="text-sm text-gray-600">Productos: <span class="font-medium">${itemsSummary}</span></p>
+                    ${adjustmentInfo}
+                    <div class="border-t border-gray-200 pt-2 mt-2">
+                        <p class="text-sm text-gray-600">Deuda total: <span class="font-semibold">S/ ${credit.totalAmount.toFixed(2)}</span></p>
+                        <p class="text-sm text-gray-600">Total pagado: <span class="font-semibold text-green-600">S/ ${totalPaid.toFixed(2)}</span></p>
+                        <p class="text-sm text-gray-600">Saldo pendiente: <span class="font-bold text-amber-600">S/ ${credit.remaining.toFixed(2)}</span></p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('paymentAmount').value = credit.remaining;
+            document.getElementById('paymentAmount').max = credit.remaining;
+            document.getElementById('paymentModal').classList.remove('hidden');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.add('hidden');
+            currentCreditId = null;
+        }
+
+        function processPayment() {
+            const amount = parseFloat(document.getElementById('paymentAmount').value);
+            const method = document.getElementById('paymentMethod').value;
+            
+            if (!amount || amount <= 0) {
+                showToast('Error', 'Ingresa un monto válido', 'error');
+                return;
+            }
+            
+            const credit = credits.find(c => c.id === currentCreditId);
+            if (amount > credit.remaining) {
+                showToast('Error', 'El monto excede la deuda', 'error');
+                return;
+            }
+            
+            credit.remaining -= amount;
+            credit.payments.push({
+                amount, 
+                method, 
+                date: new Date().toISOString(),
+                note: `Pago registrado`
+            });
+            
+            if (credit.remaining <= 0) {
+                credit.status = 'paid';
+                credit.paidAt = new Date().toISOString();
+            }
+            
+            localStorage.setItem('pineappleCredits', JSON.stringify(credits));
+            showToast('Pago Registrado', `Se registraron S/ ${amount.toFixed(2)} de pago (${method === 'cash' ? 'Efectivo' : 'Transferencia'})`);
+            closePaymentModal();
+            updateCreditScreen();
+        }
+
+        // Account Functions
+        function saveProfile() {
+            profile = {
+                businessName: document.getElementById('businessName').value,
+                ownerName: document.getElementById('ownerName').value,
+                phone: document.getElementById('businessPhone').value
+            };
+            localStorage.setItem('businessProfile', JSON.stringify(profile));
+            
+            prices = {
+                C6: parseFloat(document.getElementById('priceC6').value) || 25,
+                C8: parseFloat(document.getElementById('priceC8').value) || 20,
+                C10: parseFloat(document.getElementById('priceC10').value) || 15,
+                C12: parseFloat(document.getElementById('priceC12').value) || 12,
+                C14: parseFloat(document.getElementById('priceC14').value) || 8,
+                DES: parseFloat(document.getElementById('priceDES').value) || 3
+            };
+            localStorage.setItem('pineapplePrices', JSON.stringify(prices));
+            
+            updatePriceDisplays();
+            showToast('Configuración Guardada', 'Los cambios se han guardado correctamente');
+        }
+
+        function generateReport(type) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.text(profile.businessName || 'Venta de Piñas', 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Reporte ${type === 'daily' ? 'Diario' : type === 'weekly' ? 'Semanal' : 'Mensual'}`, 20, 30);
+            doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, 20, 40);
+            
+            let filteredSales = sales;
+            const now = new Date();
+            
+            if (type === 'daily') {
+                filteredSales = sales.filter(s => new Date(s.timestamp).toDateString() === now.toDateString());
+            } else if (type === 'weekly') {
+                const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+                filteredSales = sales.filter(s => new Date(s.timestamp) >= weekAgo);
+            } else if (type === 'monthly') {
+                filteredSales = sales.filter(s => new Date(s.timestamp).getMonth() === now.getMonth());
+            }
+            
+            const total = filteredSales.reduce((sum, s) => sum + s.total, 0);
+            const totalProfit = filteredSales.reduce((sum, s) => sum + (s.profit || 0), 0);
+            const qty = filteredSales.reduce((sum, s) => sum + (s.items ? s.items.reduce((a, b) => a + b.quantity, 0) : s.quantity), 0);
+            
+            const cashTotal = filteredSales.filter(s => s.paymentMethod === 'cash').reduce((sum, s) => sum + s.total, 0);
+            const transferTotal = filteredSales.filter(s => s.paymentMethod === 'transfer').reduce((sum, s) => sum + s.total, 0);
+            const creditTotal = filteredSales.filter(s => s.paymentMethod === 'credit').reduce((sum, s) => sum + s.total, 0);
+            
+            doc.text(`Total Ventas: S/ ${total.toFixed(2)}`, 20, 60);
+            doc.text(`Ganancia Total: S/ ${totalProfit.toFixed(2)}`, 20, 70);
+            doc.text(`Piñas Vendidas: ${qty}`, 20, 80);
+            doc.text(`Transacciones: ${filteredSales.length}`, 20, 90);
+            
+            doc.setFontSize(11);
+            doc.text('Desglose por Método de Pago:', 20, 105);
+            doc.text(`• Efectivo: S/ ${cashTotal.toFixed(2)}`, 25, 115);
+            doc.text(`• Yape/Plin: S/ ${transferTotal.toFixed(2)}`, 25, 125);
+            doc.text(`• Crédito: S/ ${creditTotal.toFixed(2)}`, 25, 135);
+            
+            let y = 150;
+            doc.setFontSize(10);
+            doc.text('Fecha', 20, y);
+            doc.text('Productos', 60, y);
+            doc.text('Total', 140, y);
+            doc.text('Ganancia', 170, y);
+            y += 10;
+            
+            filteredSales.forEach(s => {
+                if (y > 280) {
+                    doc.addPage();
+                    y = 20;
+                }
+                const items = s.items ? s.items.map(i => `${i.quantity}${i.type}`).join(', ') : `${s.quantity}${s.type}`;
+                const totalStr = s.manualTotal !== null ? `${s.total.toFixed(2)}*` : s.total.toFixed(2);
+                const profitStr = s.profit !== undefined ? `${s.profit.toFixed(2)}` : '-';
+                
+                doc.text(new Date(s.timestamp).toLocaleDateString('es-ES'), 20, y);
+                doc.text(items.substring(0, 30), 60, y);
+                doc.text(`S/ ${totalStr}`, 140, y);
+                doc.text(profitStr, 170, y);
+                y += 8;
+            });
+            
+            if (filteredSales.some(s => s.manualTotal !== null)) {
+                doc.setFontSize(8);
+                doc.text('* Total ajustado manualmente', 20, 290);
+            }
+            
+            doc.save(`reporte_${type}_${new Date().toISOString().split('T')[0]}.pdf`);
+            showToast('Reporte Generado', 'El PDF se ha descargado');
+        }
+
+        function exportBackup() {
+            const data = {
+                sales, stock, stockHistory, purchases, credits, profile, prices,
+                exportDate: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `respaldo_piñas_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Respaldo Completo', 'Todos los datos han sido exportados');
+        }
+
+        function exportAllData() {
+            exportBackup();
+        }
+
+        function clearAllData() {
+            if (confirm('¿Eliminar TODOS los datos permanentemente?')) {
+                localStorage.clear();
+                sales = []; stock = { C6: 0, C8: 0, C10: 0, C12: 0, C14: 0, DES: 0 };
+                stockHistory = []; purchases = []; credits = []; saleCart = [];
+                manualTotal = null;
+                showToast('Datos Eliminados', 'La aplicación se reiniciará');
+                setTimeout(() => location.reload(), 1500);
+            }
+        }
+
+        // Charts - VERIFICADOS Y FUNCIONANDO
+        let homeChart, trendChart;
+
+        function initHomeCharts() {
+            const ctx1 = document.getElementById('homeChart').getContext('2d');
+            homeChart = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(typeConfig).map(k => typeConfig[k].label),
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0, 0],
+                        backgroundColor: Object.keys(typeConfig).map(k => typeConfig[k].color),
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            display: true,
+                            position: 'bottom',
+                            labels: { boxWidth: 12, font: { size: 10 } }
+                        } 
+                    }
+                }
+            });
+
+            const ctx2 = document.getElementById('trendChart').getContext('2d');
+            trendChart = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                    datasets: [{
+                        label: 'Ventas (S/)',
+                        data: [0, 0, 0, 0, 0, 0, 0],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#f59e0b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: function(value) { return 'S/ ' + value; } } }
+                    }
+                }
+            });
+        }
+
+        function updateHomeCharts() {
+            // Gráfico de ventas por tipo (datos de la semana)
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            const weekSales = sales.filter(s => new Date(s.timestamp) >= weekAgo);
+            
+            const typeCount = { C6: 0, C8: 0, C10: 0, C12: 0, C14: 0, DES: 0 };
+            weekSales.forEach(s => { 
+                if (s.items) {
+                    s.items.forEach(i => { if (typeCount[i.type] !== undefined) typeCount[i.type] += i.quantity; });
+                } else {
+                    if (typeCount[s.type] !== undefined) typeCount[s.type] += s.quantity; 
+                }
+            });
+            
+            homeChart.data.datasets[0].data = Object.values(typeCount);
+            homeChart.update();
+
+            // Gráfico de tendencia semanal (últimos 7 días)
+            const days = [];
+            const values = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                days.push(d.toLocaleDateString('es-ES', { weekday: 'short' }));
+                const daySales = sales.filter(s => new Date(s.timestamp).toDateString() === d.toDateString())
+                    .reduce((sum, s) => sum + s.total, 0);
+                values.push(daySales);
+            }
+            trendChart.data.labels = days;
+            trendChart.data.datasets[0].data = values;
+            trendChart.update();
+        }
+
+        function showToast(title, message, type = 'success') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').textContent = message;
+            document.getElementById('toastIcon').className = type === 'error' ? 'fas fa-exclamation-circle text-red-400' : 'fas fa-check-circle text-green-400';
+            
+            toast.classList.remove('translate-x-full');
+            setTimeout(() => toast.classList.add('translate-x-full'), 3000);
+        }
+    </script>
+</body>
+</html>
